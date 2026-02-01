@@ -1,0 +1,13 @@
+{
+  "productName": "weekly",
+  "bundle": {
+    "icon": ["icons/icon.png"],
+    "active": true,
+    "linux": {
+      "deb": {
+        "depends": ["curl", "wget"]
+      }
+    },
+    "targets": ["deb", "appimage"]
+  }
+}

@@ -1,0 +1,150 @@
+mod app;
+mod util;
+
+use tauri::Manager;
+
+#[cfg(desktop)]
+use tauri_plugin_window_state::Builder as WindowStatePlugin;
+
+#[cfg(desktop)]
+use tauri_plugin_window_state::StateFlags;
+
+#[cfg(target_os = "macos")]
+use std::time::Duration;
+
+use app::{
+    invoke::{download_file, download_file_by_binary, send_notification},
+    window::set_window,
+};
+#[cfg(desktop)]
+use app::setup::{set_global_shortcut, set_system_tray};
+use util::get_pake_config;
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run_app() {
+    let (pake_config, tauri_config) = get_pake_config();
+    let tauri_app = tauri::Builder::default();
+
+    #[cfg(desktop)]
+    let show_system_tray = pake_config.show_system_tray();
+    #[cfg(desktop)]
+    let hide_on_close = pake_config.windows[0].hide_on_close;
+    #[cfg(desktop)]
+    let activation_shortcut = pake_config.windows[0].activation_shortcut.clone();
+    #[cfg(desktop)]
+    let init_fullscreen = pake_config.windows[0].fullscreen;
+    #[cfg(desktop)]
+    let start_to_tray = pake_config.windows[0].start_to_tray && show_system_tray; // Only valid when tray is enabled
+    #[cfg(desktop)]
+    let multi_instance = pake_config.multi_instance;
+
+    #[allow(deprecated)]
+    #[cfg(not(desktop))]
+    let app_builder = tauri_app
+        .plugin(tauri_plugin_oauth::init())
+        .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_safe_area_insets_css::init());
+
+    #[allow(deprecated)]
+    #[cfg(desktop)]
+    let mut app_builder = tauri_app
+        .plugin(tauri_plugin_oauth::init())
+        .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_notification::init());
+
+    #[cfg(desktop)]
+    {
+        let window_state_plugin = WindowStatePlugin::default()
+            .with_state_flags(if init_fullscreen {
+                StateFlags::FULLSCREEN
+            } else {
+                // Prevent flickering on the first open.
+                StateFlags::all() & !StateFlags::VISIBLE
+            })
+            .build();
+        app_builder = app_builder.plugin(window_state_plugin);
+    }
+
+    // Only add single instance plugin if multiple instances are not allowed
+    #[cfg(desktop)]
+    if !multi_instance {
+        app_builder = app_builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            if let Some(window) = app.get_webview_window("pake") {
+                let _ = window.unminimize();
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }));
+    }
+
+    app_builder
+        .invoke_handler(tauri::generate_handler![
+            download_file,
+            download_file_by_binary,
+            send_notification,
+        ])
+        .setup(move |app| {
+            #[cfg(desktop)]
+            let window = set_window(app, &pake_config, &tauri_config);
+
+            #[cfg(not(desktop))]
+            let _ = set_window(app, &pake_config, &tauri_config);
+
+            #[cfg(desktop)]
+            {
+                set_system_tray(
+                    app.app_handle(),
+                    show_system_tray,
+                    &pake_config.system_tray_path,
+                )
+                .unwrap();
+                set_global_shortcut(app.app_handle(), activation_shortcut).unwrap();
+            }
+
+            // Show window after state restoration to prevent position flashing
+            // Unless start_to_tray is enabled, then keep it hidden
+            #[cfg(desktop)]
+            if !start_to_tray {
+                let window_clone = window.clone();
+                tauri::async_runtime::spawn(async move {
+                    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+                    window_clone.show().unwrap();
+                });
+            }
+
+            Ok(())
+        })
+        .on_window_event(move |_window, _event| {
+            #[cfg(desktop)]
+            if let tauri::WindowEvent::CloseRequested { api, .. } = _event {
+                if hide_on_close {
+                    // Hide window when hide_on_close is enabled (regardless of tray status)
+                    let window = _window.clone();
+                    tauri::async_runtime::spawn(async move {
+                        #[cfg(target_os = "macos")]
+                        {
+                            if window.is_fullscreen().unwrap_or(false) {
+                                window.set_fullscreen(false).unwrap();
+                                tokio::time::sleep(Duration::from_millis(900)).await;
+                            }
+                        }
+                        window.minimize().unwrap();
+                        window.hide().unwrap();
+                    });
+                    api.prevent_close();
+                } else {
+                    // Exit app completely when hide_on_close is false
+                    std::process::exit(0);
+                }
+            }
+        })
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}
+
+pub fn run() {
+    run_app()
+}

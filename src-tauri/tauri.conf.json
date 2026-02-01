@@ -1,0 +1,19 @@
+{
+  "productName": "CoursePKU",
+  "identifier": "com.pku.course",
+  "version": "1.0.0",
+  "app": {
+    "withGlobalTauri": true,
+    "trayIcon": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": false,
+      "id": "pake-tray"
+    },
+    "security": {
+      "headers": {}
+    }
+  },
+  "build": {
+    "frontendDist": "../dist"
+  }
+}
