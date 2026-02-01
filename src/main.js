@@ -22,6 +22,7 @@ import {
     initializePageTitleText,
     convertBlankLinksToTop,
     setViewportMeta,
+    removeBootstrap,
 } from './utils.js';
 
 applyStylesForCurrentPage();
@@ -41,6 +42,7 @@ formValueStorage();
 removeEmptyTableRows();
 customizeIaaaRememberCheckbox();
 removeConflictJQuery();
+removeBootstrap();
 initializeBottomNavigationBar();
 formatAnnouncementTime();
 initializeMenuToggleButton();

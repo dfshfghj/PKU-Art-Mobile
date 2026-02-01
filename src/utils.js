@@ -1281,6 +1281,24 @@ function removeConflictJQuery() {
     observer.observe(document, { childList: true, subtree: true });
 }
 
+function removeBootstrap() {
+    const observer = new MutationObserver((mutations) => {
+        for (const mut of mutations) {
+            for (const node of mut.addedNodes) {
+                if (node.nodeType === 1 && node.tagName === 'LINK') {
+                    const href = node.href || '';
+                    if (href.includes('bootstrap.min.css')) {
+                        console.log('[Tampermonkey] Blocked Bootstrap:', href);
+                        node.remove();
+                    }
+                }
+            }
+        }
+    });
+
+    observer.observe(document, { childList: true, subtree: true });
+}
+
 function initializeBottomNavigationBar() {
     if (!/^https:\/\/course\.pku\.edu\.cn\//.test(window.location.href)) {
         return;
@@ -1471,4 +1489,5 @@ export {
     convertBlankLinksToTop,
     initializePageTitleText,
     setViewportMeta,
+    removeBootstrap,
 };
