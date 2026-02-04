@@ -6,6 +6,7 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
+        "build:tauri": "node build-tauri.js",
         "preview": "vite preview",
         "tauri": "tauri",
         "release": "python3 update-cdn.py update"
