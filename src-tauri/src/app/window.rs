@@ -56,8 +56,7 @@ pub fn set_window(app: &mut App, config: &PakeConfig, tauri_config: &Config) -> 
     #[cfg(not(desktop))]
     let effective_title = "";
 
-    let mut window_builder = WebviewWindowBuilder::new(app, "pake", url)
-        .user_agent(user_agent);
+    let mut window_builder = WebviewWindowBuilder::new(app, "pake", url).user_agent(user_agent);
 
     #[cfg(desktop)]
     {

@@ -2,9 +2,13 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "pake-capability",
   "description": "Capability for the pake app.",
-  "webviews": ["pake"],
+  "webviews": [
+    "pake"
+  ],
   "remote": {
-    "urls": ["https://*.*"]
+    "urls": [
+      "https://*.*"
+    ]
   },
   "permissions": [
     "shell:allow-open",
@@ -21,6 +25,15 @@
     "notification:allow-register-action-types",
     "notification:default",
     "core:path:default",
-    "safe-area-insets-css:default"
+    "safe-area-insets-css:default",
+    "store:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+          {
+            "url": "https://*.pku.edu.cn"
+          }
+        ]
+      }
   ]
 }

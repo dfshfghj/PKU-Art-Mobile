@@ -5,17 +5,19 @@ import fs from 'fs';
 import dotenv from 'dotenv';
 import AutoImport from 'unplugin-auto-import/vite';
 
+const envConfig = dotenv.parse(fs.readFileSync('.env'));
+
 const date = new Date().toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
 });
 
-// 读取并解析 version.env 文件
-const envConfig = dotenv.parse(fs.readFileSync('.env'));
-
 // https://vitejs.dev/config/
 export default defineConfig({
+    define: {
+        'import.meta.env.BUILD_TARGET': JSON.stringify(process.env.BUILD_TARGET || envConfig.BUILD_TARGET || 'userscript'),
+    },
     plugins: [
         AutoImport({
             imports: [util.unimportPreset],

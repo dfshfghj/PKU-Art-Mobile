@@ -23,6 +23,8 @@ import {
     convertBlankLinksToTop,
     setViewportMeta,
     removeBootstrap,
+    persistUserInfo,
+    autoLogin,
 } from './utils.js';
 
 applyStylesForCurrentPage();
@@ -49,4 +51,6 @@ initializeMenuToggleButton();
 initializePageTitleText();
 convertBlankLinksToTop();
 setViewportMeta();
+persistUserInfo();
+autoLogin();
 // insertHTMLForDebug();

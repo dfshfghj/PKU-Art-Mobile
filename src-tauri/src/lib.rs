@@ -12,18 +12,18 @@ use tauri_plugin_window_state::StateFlags;
 #[cfg(target_os = "macos")]
 use std::time::Duration;
 
+#[cfg(desktop)]
+use app::setup::{set_global_shortcut, set_system_tray};
 use app::{
     invoke::{download_file, download_file_by_binary, send_notification},
     window::set_window,
 };
-#[cfg(desktop)]
-use app::setup::{set_global_shortcut, set_system_tray};
 use util::get_pake_config;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run_app() {
     let (pake_config, tauri_config) = get_pake_config();
-    let tauri_app = tauri::Builder::default();
+    let tauri_app = tauri::Builder::default().plugin(tauri_plugin_store::Builder::new().build());
 
     #[cfg(desktop)]
     let show_system_tray = pake_config.show_system_tray();

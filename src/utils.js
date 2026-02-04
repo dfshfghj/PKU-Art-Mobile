@@ -1,5 +1,8 @@
 import { downloadIcon, linkIcon, sparkIcon, refreshIcon, closeIcon, homeIcon, gradeIcon, notificationIcon, announcementIcon, menuIcon } from './icon.js';
 import '@saurl/tauri-plugin-safe-area-insets-css-api';
+import { Store } from '@tauri-apps/plugin-store';
+import { fetch } from '@tauri-apps/plugin-http';
+
 // Other utilities
 function initializeLogoNavigation() {
     if (!/^https:\/\/course\.pku\.edu\.cn\//.test(window.location.href)) {
@@ -1304,6 +1307,10 @@ function initializeBottomNavigationBar() {
         return;
     }
 
+    if (window.location.href === 'https://course.pku.edu.cn/') {
+        return;
+    }
+
     try {
         if (window.self !== window.top) {
             return;
@@ -1467,6 +1474,88 @@ function setViewportMeta() {
     }
 }
 
+async function persistUserInfo() {
+    if (import.meta.env.BUILD_TARGET === 'userscript') {
+        return
+    }
+
+    const store = await Store.load('user.json');
+
+    const origOpen = XMLHttpRequest.prototype.open;
+    const origSend = XMLHttpRequest.prototype.send;
+    XMLHttpRequest.prototype.open = function(method, url) {
+        this._url = url;
+        return origOpen.apply(this, arguments);
+    }
+    XMLHttpRequest.prototype.send = function(body) {
+        if (this._url === '/iaaa/oauthlogin.do') {
+            const userName = body.match(/userName=([^&]*)/)[1];
+            const password = body.match(/password=([^&]*)/)[1];
+            localStorage.setItem('pku-art-user-name', userName);
+            localStorage.setItem('pku-art-password', password);
+            store.set('user', { 'userName': userName, 'password': password });
+            const originalOnReadyStateChange = this.onreadystatechange;
+
+            this.onreadystatechange = function() {
+                if (this.readyState === 4) {
+                    try {
+                        console.log(this.responseText);
+                        const response = JSON.parse(this.responseText);
+                        if (response.success === true) {
+                            const timestamp = Date.now();
+                            document.cookie = `course_login=true; domain=.pku.edu.cn; path=/`;
+                            document.cookie = `course_last_login=${timestamp}; domain=.pku.edu.cn; path=/`;
+                        }
+                    } catch (e) {
+
+                    }
+                }
+
+                if (originalOnReadyStateChange) {
+                    originalOnReadyStateChange.apply(this, arguments);
+                }
+            };
+        }
+
+        return origSend.apply(this, arguments);
+    }
+}
+
+async function autoLogin() {
+    if (import.meta.env.BUILD_TARGET === 'userscript') {
+        return
+    }
+
+    if (document.cookie.includes('course_login=true')) {
+        return
+    }
+
+    if (!/^https:\/\/course\.pku\.edu\.cn\/\S*$/.test(window.location.href)) {
+        return
+    }
+    const store = await Store.load('user.json');
+    const user = await store.get('user');
+    if (user) {
+        const userName = user.userName;
+        const password = user.password;
+        const res = await fetch('https://iaaa.pku.edu.cn/iaaa/oauthlogin.do', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `appid=blackboard&userName=${userName}&password=${password}&randCode=&smsCode=&otpCode=&remTrustChk=false&redirUrl=http%3A%2F%2Fcourse.pku.edu.cn%2Fwebapps%2Fbb-sso-BBLEARN%2Fexecute%2FauthValidate%2FcampusLogin`
+        })
+        const data = await res.json();
+        if (data.success === true) {
+            const token = data.token;
+            const timestamp = Date.now();
+            document.cookie = `course_login=true; domain=.pku.edu.cn; path=/`;
+            document.cookie = `course_last_login=${timestamp}; domain=.pku.edu.cn; path=/`;
+            window.location.href = `https://course.pku.edu.cn/webapps/bb-sso-BBLEARN/execute/authValidate/campusLogin?_rand=${Math.random()}&token=${token}`;
+        }
+    }
+}
+
 export {
     initializeLogoNavigation,
     ensureSidebarVisible,
@@ -1490,4 +1579,6 @@ export {
     initializePageTitleText,
     setViewportMeta,
     removeBootstrap,
+    persistUserInfo,
+    autoLogin,
 };

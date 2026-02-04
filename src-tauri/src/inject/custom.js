@@ -754,7 +754,7 @@ function onDocumentElementReady() {
     var e = new Error(message);
     return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
   };
-  var _Channel_onmessage, _Channel_nextMessageIndex, _Channel_pendingMessages, _Channel_messageEndIndex;
+  var _Channel_onmessage, _Channel_nextMessageIndex, _Channel_pendingMessages, _Channel_messageEndIndex, _Resource_rid;
   const SERIALIZE_TO_IPC_FN = "__TAURI_TO_IPC_KEY__";
   function transformCallback(callback, once = false) {
     return window.__TAURI_INTERNALS__.transformCallback(callback, once);
@@ -840,6 +840,25 @@ function onDocumentElementReady() {
   async function invoke(cmd, args = {}, options) {
     return window.__TAURI_INTERNALS__.invoke(cmd, args, options);
   }
+  class Resource {
+    get rid() {
+      return __classPrivateFieldGet(this, _Resource_rid, "f");
+    }
+    constructor(rid) {
+      _Resource_rid.set(this, void 0);
+      __classPrivateFieldSet(this, _Resource_rid, rid);
+    }
+    /**
+     * Destroys and cleans up this resource from memory.
+     * **You should not call any method on this object anymore and should drop any reference to it.**
+     */
+    async close() {
+      return invoke("plugin:resources|close", {
+        rid: this.rid
+      });
+    }
+  }
+  _Resource_rid = /* @__PURE__ */ new WeakMap();
   async function getTopInset() {
     return await invoke("plugin:safe-area-insets-css|get_top_inset", {
       payload: {}
@@ -879,6 +898,252 @@ function onDocumentElementReady() {
     init();
   }
   waitForTauritoLoad();
+  var TauriEvent;
+  (function(TauriEvent2) {
+    TauriEvent2["WINDOW_RESIZED"] = "tauri://resize";
+    TauriEvent2["WINDOW_MOVED"] = "tauri://move";
+    TauriEvent2["WINDOW_CLOSE_REQUESTED"] = "tauri://close-requested";
+    TauriEvent2["WINDOW_DESTROYED"] = "tauri://destroyed";
+    TauriEvent2["WINDOW_FOCUS"] = "tauri://focus";
+    TauriEvent2["WINDOW_BLUR"] = "tauri://blur";
+    TauriEvent2["WINDOW_SCALE_FACTOR_CHANGED"] = "tauri://scale-change";
+    TauriEvent2["WINDOW_THEME_CHANGED"] = "tauri://theme-changed";
+    TauriEvent2["WINDOW_CREATED"] = "tauri://window-created";
+    TauriEvent2["WEBVIEW_CREATED"] = "tauri://webview-created";
+    TauriEvent2["DRAG_ENTER"] = "tauri://drag-enter";
+    TauriEvent2["DRAG_OVER"] = "tauri://drag-over";
+    TauriEvent2["DRAG_DROP"] = "tauri://drag-drop";
+    TauriEvent2["DRAG_LEAVE"] = "tauri://drag-leave";
+  })(TauriEvent || (TauriEvent = {}));
+  async function _unlisten(event, eventId) {
+    window.__TAURI_EVENT_PLUGIN_INTERNALS__.unregisterListener(event, eventId);
+    await invoke("plugin:event|unlisten", {
+      event,
+      eventId
+    });
+  }
+  async function listen(event, handler, options) {
+    var _a;
+    const target = (_a = void 0) !== null && _a !== void 0 ? _a : { kind: "Any" };
+    return invoke("plugin:event|listen", {
+      event,
+      target,
+      handler: transformCallback(handler)
+    }).then((eventId) => {
+      return async () => _unlisten(event, eventId);
+    });
+  }
+  class Store extends Resource {
+    constructor(rid) {
+      super(rid);
+    }
+    /**
+     * Create a new Store or load the existing store with the path.
+     *
+     * @example
+     * ```typescript
+     * import { Store } from '@tauri-apps/api/store';
+     * const store = await Store.load('store.json');
+     * ```
+     *
+     * @param path Path to save the store in `app_data_dir`
+     * @param options Store configuration options
+     */
+    static async load(path, options) {
+      const rid = await invoke("plugin:store|load", {
+        path,
+        options
+      });
+      return new Store(rid);
+    }
+    /**
+     * Gets an already loaded store.
+     *
+     * If the store is not loaded, returns `null`. In this case you must {@link Store.load load} it.
+     *
+     * This function is more useful when you already know the store is loaded
+     * and just need to access its instance. Prefer {@link Store.load} otherwise.
+     *
+     * @example
+     * ```typescript
+     * import { Store } from '@tauri-apps/api/store';
+     * let store = await Store.get('store.json');
+     * if (!store) {
+     *   store = await Store.load('store.json');
+     * }
+     * ```
+     *
+     * @param path Path of the store.
+     */
+    static async get(path) {
+      return await invoke("plugin:store|get_store", { path }).then((rid) => rid ? new Store(rid) : null);
+    }
+    async set(key, value) {
+      await invoke("plugin:store|set", {
+        rid: this.rid,
+        key,
+        value
+      });
+    }
+    async get(key) {
+      const [value, exists] = await invoke("plugin:store|get", {
+        rid: this.rid,
+        key
+      });
+      return exists ? value : void 0;
+    }
+    async has(key) {
+      return await invoke("plugin:store|has", {
+        rid: this.rid,
+        key
+      });
+    }
+    async delete(key) {
+      return await invoke("plugin:store|delete", {
+        rid: this.rid,
+        key
+      });
+    }
+    async clear() {
+      await invoke("plugin:store|clear", { rid: this.rid });
+    }
+    async reset() {
+      await invoke("plugin:store|reset", { rid: this.rid });
+    }
+    async keys() {
+      return await invoke("plugin:store|keys", { rid: this.rid });
+    }
+    async values() {
+      return await invoke("plugin:store|values", { rid: this.rid });
+    }
+    async entries() {
+      return await invoke("plugin:store|entries", { rid: this.rid });
+    }
+    async length() {
+      return await invoke("plugin:store|length", { rid: this.rid });
+    }
+    async reload(options) {
+      await invoke("plugin:store|reload", { rid: this.rid, ...options });
+    }
+    async save() {
+      await invoke("plugin:store|save", { rid: this.rid });
+    }
+    async onKeyChange(key, cb) {
+      return await listen("store://change", (event) => {
+        if (event.payload.resourceId === this.rid && event.payload.key === key) {
+          cb(event.payload.exists ? event.payload.value : void 0);
+        }
+      });
+    }
+    async onChange(cb) {
+      return await listen("store://change", (event) => {
+        if (event.payload.resourceId === this.rid) {
+          cb(event.payload.key, event.payload.exists ? event.payload.value : void 0);
+        }
+      });
+    }
+  }
+  const ERROR_REQUEST_CANCELLED = "Request cancelled";
+  async function fetch(input, init2) {
+    const signal = init2 == null ? void 0 : init2.signal;
+    if (signal == null ? void 0 : signal.aborted) {
+      throw new Error(ERROR_REQUEST_CANCELLED);
+    }
+    const maxRedirections = init2 == null ? void 0 : init2.maxRedirections;
+    const connectTimeout = init2 == null ? void 0 : init2.connectTimeout;
+    const proxy = init2 == null ? void 0 : init2.proxy;
+    const danger = init2 == null ? void 0 : init2.danger;
+    if (init2) {
+      delete init2.maxRedirections;
+      delete init2.connectTimeout;
+      delete init2.proxy;
+      delete init2.danger;
+    }
+    const headers = (init2 == null ? void 0 : init2.headers) ? init2.headers instanceof Headers ? init2.headers : new Headers(init2.headers) : new Headers();
+    const req = new Request(input, init2);
+    const buffer = await req.arrayBuffer();
+    const data = buffer.byteLength !== 0 ? Array.from(new Uint8Array(buffer)) : null;
+    for (const [key, value] of req.headers) {
+      if (!headers.get(key)) {
+        headers.set(key, value);
+      }
+    }
+    const headersArray = headers instanceof Headers ? Array.from(headers.entries()) : Array.isArray(headers) ? headers : Object.entries(headers);
+    const mappedHeaders = headersArray.map(([name, val]) => [
+      name,
+      // we need to ensure we have all header values as strings
+      // eslint-disable-next-line
+      typeof val === "string" ? val : val.toString()
+    ]);
+    if (signal == null ? void 0 : signal.aborted) {
+      throw new Error(ERROR_REQUEST_CANCELLED);
+    }
+    const rid = await invoke("plugin:http|fetch", {
+      clientConfig: {
+        method: req.method,
+        url: req.url,
+        headers: mappedHeaders,
+        data,
+        maxRedirections,
+        connectTimeout,
+        proxy,
+        danger
+      }
+    });
+    const abort = () => invoke("plugin:http|fetch_cancel", { rid });
+    if (signal == null ? void 0 : signal.aborted) {
+      abort();
+      throw new Error(ERROR_REQUEST_CANCELLED);
+    }
+    signal == null ? void 0 : signal.addEventListener("abort", () => void abort());
+    const { status, statusText, url, headers: responseHeaders, rid: responseRid } = await invoke("plugin:http|fetch_send", {
+      rid
+    });
+    const dropBody = () => {
+      return invoke("plugin:http|fetch_cancel_body", { rid: responseRid });
+    };
+    const readChunk = async (controller) => {
+      let data2;
+      try {
+        data2 = await invoke("plugin:http|fetch_read_body", {
+          rid: responseRid
+        });
+      } catch (e) {
+        controller.error(e);
+        void dropBody();
+        return;
+      }
+      const dataUint8 = new Uint8Array(data2);
+      const lastByte = dataUint8[dataUint8.byteLength - 1];
+      const actualData = dataUint8.slice(0, dataUint8.byteLength - 1);
+      if (lastByte === 1) {
+        controller.close();
+        return;
+      }
+      controller.enqueue(actualData);
+    };
+    const body = [101, 103, 204, 205, 304].includes(status) ? null : new ReadableStream({
+      start: (controller) => {
+        signal == null ? void 0 : signal.addEventListener("abort", () => {
+          controller.error(ERROR_REQUEST_CANCELLED);
+          void dropBody();
+        });
+      },
+      pull: (controller) => readChunk(controller),
+      cancel: () => {
+        void dropBody();
+      }
+    });
+    const res = new Response(body, {
+      status,
+      statusText
+    });
+    Object.defineProperty(res, "url", { value: url });
+    Object.defineProperty(res, "headers", {
+      value: new Headers(responseHeaders)
+    });
+    return res;
+  }
   function initializeLogoNavigation() {
     if (!/^https:\/\/course\.pku\.edu\.cn\//.test(window.location.href)) {
       return;
@@ -1944,6 +2209,9 @@ ${downloadUrl}`);
     if (!/^https:\/\/course\.pku\.edu\.cn\//.test(window.location.href)) {
       return;
     }
+    if (window.location.href === "https://course.pku.edu.cn/") {
+      return;
+    }
     try {
       if (window.self !== window.top) {
         return;
@@ -2083,6 +2351,75 @@ ${downloadUrl}`);
       });
     }
   }
+  async function persistUserInfo() {
+    const store = await Store.load("user.json");
+    const origOpen = XMLHttpRequest.prototype.open;
+    const origSend = XMLHttpRequest.prototype.send;
+    XMLHttpRequest.prototype.open = function(method, url) {
+      this._url = url;
+      return origOpen.apply(this, arguments);
+    };
+    XMLHttpRequest.prototype.send = function(body) {
+      if (this._url === "/iaaa/oauthlogin.do") {
+        const userName = body.match(/userName=([^&]*)/)[1];
+        const password = body.match(/password=([^&]*)/)[1];
+        localStorage.setItem("pku-art-user-name", userName);
+        localStorage.setItem("pku-art-password", password);
+        store.set("user", { "userName": userName, "password": password });
+        const originalOnReadyStateChange = this.onreadystatechange;
+        this.onreadystatechange = function() {
+          if (this.readyState === 4) {
+            try {
+              console.log(this.responseText);
+              const response = JSON.parse(this.responseText);
+              if (response.success === true) {
+                const timestamp = Date.now();
+                document.cookie = `course_login=true; domain=.pku.edu.cn; path=/`;
+                document.cookie = `course_last_login=${timestamp}; domain=.pku.edu.cn; path=/`;
+              }
+            } catch (e) {
+            }
+          }
+          if (originalOnReadyStateChange) {
+            originalOnReadyStateChange.apply(this, arguments);
+          }
+        };
+      }
+      return origSend.apply(this, arguments);
+    };
+  }
+  async function autoLogin() {
+    if (document.cookie.includes("course_login=true")) {
+      console.log("autoLogin: already logged in");
+      return;
+    }
+    if (!/^https:\/\/course\.pku\.edu\.cn\/\S*$/.test(window.location.href)) {
+      return;
+    }
+    const store = await Store.load("user.json");
+    const user = await store.get("user");
+    if (user) {
+      const userName = user.userName;
+      const password = user.password;
+      console.log("autoLogin: userName", userName);
+      const res = await fetch("https://iaaa.pku.edu.cn/iaaa/oauthlogin.do", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: `appid=blackboard&userName=${userName}&password=${password}&randCode=&smsCode=&otpCode=&remTrustChk=false&redirUrl=http%3A%2F%2Fcourse.pku.edu.cn%2Fwebapps%2Fbb-sso-BBLEARN%2Fexecute%2FauthValidate%2FcampusLogin`
+      });
+      const data = await res.json();
+      if (data.success === true) {
+        const token = data.token;
+        const timestamp = Date.now();
+        document.cookie = `course_login=true; domain=.pku.edu.cn; path=/`;
+        document.cookie = `course_last_login=${timestamp}; domain=.pku.edu.cn; path=/`;
+        console.log("autoLogin: success", token);
+        window.location.href = `https://course.pku.edu.cn/webapps/bb-sso-BBLEARN/execute/authValidate/campusLogin?_rand=${Math.random()}&token=${token}`;
+      }
+    }
+  }
   applyStylesForCurrentPage();
   initializeThemeManager();
   initializeThemeToggleButton();
@@ -2107,6 +2444,8 @@ ${downloadUrl}`);
   initializePageTitleText();
   convertBlankLinksToTop();
   setViewportMeta();
+  persistUserInfo();
+  autoLogin();
 }
 
 (function () {
@@ -2122,5 +2461,10 @@ ${downloadUrl}`);
     }
   });
 
-  observer.observe(document.documentElement, { childList: true });
+  observer.observe(document, { childList: true });
+  try {
+    observer.observe(document.documentElement, { childList: true });
+  } catch (e) {
+    console.log(e);
+  }
 })();

@@ -45,9 +45,15 @@ impl<T> PlatformSpecific<T> {
         let platform = &self.android;
         #[cfg(target_os = "ios")]
         let platform = &self.ios;
-        
+
         // Fallback for any other unknown platforms
-        #[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows", target_os = "android", target_os = "ios")))]
+        #[cfg(not(any(
+            target_os = "macos",
+            target_os = "linux",
+            target_os = "windows",
+            target_os = "android",
+            target_os = "ios"
+        )))]
         let platform = &self.linux;
 
         platform

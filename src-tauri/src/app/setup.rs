@@ -2,9 +2,7 @@ use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use tauri::{
-    AppHandle, Manager,
-};
+use tauri::{AppHandle, Manager};
 
 #[cfg(desktop)]
 use tauri::{
