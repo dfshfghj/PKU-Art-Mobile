@@ -15,9 +15,6 @@ const date = new Date().toLocaleDateString('zh-CN', {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    define: {
-        'import.meta.env.BUILD_TARGET': JSON.stringify(process.env.BUILD_TARGET || envConfig.BUILD_TARGET || 'userscript'),
-    },
     plugins: [
         AutoImport({
             imports: [util.unimportPreset],

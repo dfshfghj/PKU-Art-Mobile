@@ -7,6 +7,7 @@
         "dev": "vite",
         "build": "vite build",
         "build:tauri": "node build-tauri.js",
+        "build:tauri-mobile": "node build-tauri.js mobile",
         "preview": "vite preview",
         "tauri": "tauri",
         "release": "python3 update-cdn.py update"
@@ -20,8 +21,9 @@
     },
     "dependencies": {
         "@saurl/tauri-plugin-safe-area-insets-css-api": "^0.1.0",
-        "@tauri-apps/cli": "^2.9.0",
+        "@tauri-apps/cli": "^2.10.0",
         "@tauri-apps/plugin-http": "^2.5.7",
+        "@tauri-apps/plugin-notification": "^2.3.3",
         "@tauri-apps/plugin-store": "^2.4.2",
         "monkey": "^0.9.0"
     }

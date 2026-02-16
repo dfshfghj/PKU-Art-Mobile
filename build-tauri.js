@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
-execSync('vite build', { stdio: 'inherit' });
+execSync('vite build --mode tauri', { stdio: 'inherit' });
 
 const distDir = path.join(process.cwd(), 'dist');
 const userJsFiles = fs.readdirSync(distDir).filter(file => file.endsWith('.user.js'));
@@ -24,6 +24,8 @@ for (let i = 0; i < lines.length; i++) {
 
 const contentLines = lines.slice(startIndex + 1, -1);
 const extractedContent = contentLines.join('\n');
+const DesktopContent = `observer.observe(document, { childList: true });`;
+const MobileContent = `observer.observe(document.documentElement, { childList: true });`;
 const customJsContent = `function onDocumentElementReady() {
 ${extractedContent}
 }
@@ -41,12 +43,7 @@ ${extractedContent}
     }
   });
 
-  observer.observe(document, { childList: true });
-  try {
-    observer.observe(document.documentElement, { childList: true });
-  } catch (e) {
-    console.log(e);
-  }
+  ${process.argv[2] === 'mobile' ? MobileContent : DesktopContent}
 })();`;
 
 const customJsPath = path.join(process.cwd(), 'src-tauri', 'src', 'inject', 'custom.js');
