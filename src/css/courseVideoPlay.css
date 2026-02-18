@@ -16,3 +16,15 @@ iframe {
     min-height: 100vh;
     height: fit-content;
 }
+
+@media (max-width: 668px) {
+    body {
+        overflow: hidden;
+    }
+
+    #contentPanel,
+    #contentPanel * {
+        margin: 0;
+        padding: 0;
+    }
+}

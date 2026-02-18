@@ -286,12 +286,39 @@ label[for='injectDownloadSwitch']:before {
 }
 
 @media (max-width: 1037px) { 
+    #app {
+        width: 100%;
+    }
+
+    .course-info__header {
+        display: block !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: center;
+    }
+
     .course-info__header span {
         font-size: 20px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .course-info__wrap {
+        display: flex;
+        flex-direction: column-reverse;
+    }
+
+    .course-info__wrapper .course-info__main,
+    .course-info__wrapper .course-info__body {
+        height: auto;
     }
 
     .course-info__wrapper .course-info__wrap {
         width: auto;
+    }
+
+    .course-info__main {
+        padding: 0 !important;
     }
 
     .course-info__footer {
