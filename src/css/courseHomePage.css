@@ -40,10 +40,6 @@ body {
     padding: 0;
 }
 
-.locationPane {
-    padding-bottom: var(--safe-area-inset-bottom, 0px);
-}
-
 #globalNavPageNavArea {
     background: var(--c-navbar) var(--i-logo) no-repeat 2em center / auto 30px !important;
 }
@@ -79,7 +75,6 @@ body {
     /* margin-bottom: 1000px; */
     /* padding-bottom: 1000px; */
     margin: 0;
-    margin-top: 60px;
     background-color: var(--c-sidebar);
 }
 
@@ -250,7 +245,6 @@ html #global-nav-bar-wrap {
 
     #column1,
     #column2 {
-        margin-top: 60px;
         margin-left: 1em;
         height: fit-content;
     }
@@ -330,6 +324,5 @@ div.edit_controls > a:hover::before {
 @media (max-width: 1037px) {
     .containerPortal {
         flex-direction: column;
-        padding-bottom: 60px !important;
     }
 }

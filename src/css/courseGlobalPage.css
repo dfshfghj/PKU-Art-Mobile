@@ -46,8 +46,6 @@ table.bouncer,
     padding: 1.2em 1em 1em 1em;
     box-sizing: border-box;
     height: 80px;
-    margin-bottom: 1em;
-    margin-top: 60px;
     z-index: 10;
     color: var(--c-title);
     background-color: var(--c-background);
@@ -67,11 +65,6 @@ table.bouncer,
     color: var(--c-title);
     -webkit-animation: tracking-in-expand 0.7s cubic-bezier(0.215, 0.61, 0.355, 1) both;
     animation: tracking-in-expand 0.7s cubic-bezier(0.215, 0.61, 0.355, 1) both;
-}
-
-/* 置高 */
-#globalNavPageContentArea {
-    margin-top: 60px;
 }
 
 #globalNavPageContentArea,
@@ -134,4 +127,10 @@ div.container {
 .mybb-tools li a:focus,
 .mybb-tools li a:focus img {
     outline: none;
+}
+
+@media (max-width: 800px) {
+    #breadcrumbs {
+        display: none;
+    }
 }

@@ -1,0 +1,122 @@
+@media (max-width: 668px) {
+    .locationPane #contentPanel {
+        display: none;
+    }
+
+    .pku-art-container > * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+        color: var(--c-text);
+    }
+
+    button a {
+        color: var(--c-text);
+        text-decoration: none;
+    }
+
+    .pku-art-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px 16px;
+    }
+
+    .header {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 24px;
+        padding-left: 4px;
+    }
+
+    .card {
+        background-color: var(--c-card);
+        border-radius: 12px;
+        padding: 0 16px;
+        margin-bottom: 24px;
+        transition: background-color 0.3s ease;
+        overflow: hidden;
+    }
+
+    /* 用户信息区域 */
+    .user-profile {
+        display: flex;
+        align-items: stretch;
+        gap: 16px;
+        padding: 16px;
+    }
+    .user-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background-color: var(--c-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+    .user-info h2 {
+        font-size: 18px;
+        margin-bottom: 4px;
+        color: var(--c-title);
+    }
+    .user-info p {
+        font-size: 14px;
+    }
+
+    /* 列表项通用 */
+    .setting-list { list-style: none; }
+    
+    .setting-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--c-border);
+        cursor: pointer; /* 提示可点击 */
+        transition: background-color 0.2s;
+    }
+
+    .setting-item:last-child { 
+        border-bottom: none; 
+    }
+
+    .item-label {
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--c-text);
+    }
+
+    /* 右侧状态文本和箭头 */
+    .item-value {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--c-secondary);
+        font-size: 15px;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 14px;
+        border-radius: 10px;
+        border: none;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 10px;
+        transition: opacity 0.2s;
+    }
+    .btn:active { opacity: 0.7; }
+    .btn-primary { background-color: var(--accent-color); color: white; }
+    .btn-danger {
+        background-color: var(--red-3);
+        color: var(--c-title);
+        margin-top: 30px;
+    }
+
+    svg { display: block; }
+}

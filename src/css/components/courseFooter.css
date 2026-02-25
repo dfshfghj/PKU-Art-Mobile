@@ -1,0 +1,11 @@
+@media (min-width: 1038px) {
+    #pkuArtBottomNav {
+        display: none !important;
+    }
+}
+
+@media (max-width: 1037px) { 
+    #globalNavPageContentArea > :last-child {
+        padding-bottom: 60px;
+    }
+}

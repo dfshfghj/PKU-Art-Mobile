@@ -43,6 +43,11 @@
     z-index: 30;
 }
 
+#globalNavPageContentArea > :first-child {
+    margin-top: 0px;
+    padding-top: 60px;
+}
+
 @media (min-width: 1038px) { 
     #globalNavPageNavArea {
         background: var(--c-navbar) var(--i-logo) no-repeat 2em center / auto 30px !important;
@@ -297,10 +302,17 @@ body .global-nav-bar-wrap {
     }
 
     #globalNavPageContentArea {
-        top: calc(var(--safe-area-inset-top, 0px) + 30px);
+        top: var(--safe-area-inset-top, 0px);
+        padding-bottom: var(--safe-area-inset-bottom, 0px);
     }
     
     #global-nav {
+        display: none;
+    }
+}
+
+@media (max-width: 668px) { 
+    .global-nav-bar:not(.mobile-only) {
         display: none;
     }
 }

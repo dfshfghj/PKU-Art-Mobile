@@ -39,11 +39,12 @@ iframe {
     height: fit-content;
 }
 
-body > div > div > #login > form :not(:first-child) {
+.login_logo,
+#login > form :not(.login_stu, .login_stu *, .login_btn[value="校园卡用户"]) {
     display: none;
 }
 
-body > div > div > #login > form {
+#login > form {
     width: 100%;
     height: 10px;
     display: block;
@@ -99,4 +100,12 @@ body > div > div > #login > form {
     background-color: var(--c-accent);
     border-radius: 10px;
     font-size: 10pt;
+}
+
+.login_btn[value="校园卡用户"] {
+    font-size: 16px;
+    font-family: initial;
+    border: 1px solid var(--c-border);
+    width: 200px !important;
+    padding: 10px;
 }

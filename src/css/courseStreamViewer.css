@@ -1,0 +1,10 @@
+body {
+    padding-top: var(--safe-area-inset-top, 0px) !important;
+    padding-bottom: var(--safe-area-inset-bottom, 0px) !important;
+    box-sizing: border-box;
+}
+
+.locationPane {
+    padding-top: 60px !important;
+    padding-bottom: 60px !important;
+}

@@ -1,8 +1,21 @@
 import { downloadIcon, linkIcon, sparkIcon, refreshIcon, closeIcon, homeIcon, gradeIcon, notificationIcon, announcementIcon, menuIcon } from './icon.js';
 import '@saurl/tauri-plugin-safe-area-insets-css-api';
 import { Store } from '@tauri-apps/plugin-store';
-import { fetch } from '@tauri-apps/plugin-http';
+import { fetch as fetch_rs } from '@tauri-apps/plugin-http';
+import { saveLogs, clearLogs } from './logger.js';
 
+let store = null;
+async function getStore() {
+  if (!store) {
+    store = await Store.load('user.json');
+  }
+  return store;
+}
+
+if (import.meta.env.MODE == 'tauri') {
+    window.fetch_rs = fetch_rs;
+    window.Store = Store;
+}
 // Other utilities
 function initializeLogoNavigation() {
     if (!/^https:\/\/course\.pku\.edu\.cn\//.test(window.location.href)) {
@@ -1143,6 +1156,30 @@ function formatAnnouncementTime() {
 
     initializeObserver();
 }
+
+function initializeSettingButton() {
+    const addSettingButton = () => {
+        if (document.querySelector('.pku-art-setting-bar')) {
+            return;
+        }
+
+        const globalNavBarWrap = document.querySelector('.global-nav-bar-wrap');
+        const settingButton = document.createElement('div');
+        settingButton.className = 'pku-art-setting-bar global-nav-bar mobile-only';
+        settingButton.innerHTML = `<a href="https://course.pku.edu.cn/webapps/blackboard/execute/personalInfo" style="background: var(--i-setting) no-repeat center; width: 100%; height: 100%;"></a>`;
+        globalNavBarWrap.appendChild(settingButton);
+    }
+
+    const observer = new MutationObserver(() => {
+        if (document.querySelector('.global-nav-bar-wrap')) {
+            observer.disconnect();
+            addSettingButton();
+        }
+    });
+
+    observer.observe(document, { childList: true, subtree: true });
+}
+
 function initializeMenuToggleButton() {
     function checkMenuPullerExists() {
         return document.querySelector('#menuPuller') !== null;
@@ -1162,13 +1199,13 @@ function initializeMenuToggleButton() {
     }
 
     function addMenuToggleButton() {
-        const navWrap = document.querySelector('.global-nav-bar-wrap');
-        if (!navWrap) {
-            setTimeout(addMenuToggleButton, 100);
+        if (document.querySelector('.pku-art-menu-toggle-bar')) {
             return;
         }
 
-        if (navWrap.querySelector('.pku-art-menu-toggle-bar')) {
+        const navWrap = document.querySelector('.global-nav-bar-wrap');
+        if (!navWrap) {
+            setTimeout(addMenuToggleButton, 100);
             return;
         }
 
@@ -1178,7 +1215,7 @@ function initializeMenuToggleButton() {
         spacer.style.minWidth = '20px';
 
         const menuToggleBar = document.createElement('div');
-        menuToggleBar.className = 'pku-art-menu-toggle-bar global-nav-bar';
+        menuToggleBar.className = 'pku-art-menu-toggle-bar global-nav-bar mobile-only';
         menuToggleBar.title = '展开侧边栏菜单';
 
         const menuToggleButton = document.createElement('button');
@@ -1215,13 +1252,17 @@ function initializePageTitleText() {
             title: '公告'
         },
         {
-            pattern: /webapps\/bb-social-learning-BBLEARN\/execute\/mybb\?cmd=display&toolId=AlertsOnMyBb_____AlertsTool/,
+            pattern: /webapps\/streamViewer\/streamViewer\?cmd=view&streamName=alerts/,
             title: '通知'
         },
         {
-            pattern: /webapps\/bb-social-learning-BBLEARN\/execute\/mybb\?cmd=display&toolId=MyGradesOnMyBb_____MyGradesTool&extraParams=override_stream=mygrades/,
+            pattern: /webapps\/streamViewer\/streamViewer\?cmd=view&streamName=mygrades/,
             title: '成绩'
-        }
+        },
+        {
+            pattern: /webapps\/blackboard\/execute\/personalInfo/,
+            title: '设置'
+        },
     ];
 
     let pageTitle = null;
@@ -1236,34 +1277,32 @@ function initializePageTitleText() {
         return;
     }
 
-    function addPageTitleText() {
+    const addPageTitleText = () => {
+        if (document.querySelector('.pku-art-page-title-text')) {
+            return;
+        }
+        
         const navWrap = document.querySelector('.global-nav-bar-wrap');
-        if (!navWrap) {
-            setTimeout(addPageTitleText, 100);
-            return;
-        }
-
-        if (navWrap.querySelector('.pku-art-page-title-text')) {
-            return;
-        }
-
         const titleElement = document.createElement('span');
-        titleElement.className = 'pku-art-page-title-text';
+        titleElement.className = 'pku-art-page-title-text mobile_only';
         titleElement.textContent = pageTitle;
         titleElement.style.flex = '1 1 auto';
         titleElement.style.fontSize = '20px';
         titleElement.style.fontWeight = 'bold';
-        titleElement.style.color = 'var(--c-text)';
+        titleElement.style.color = 'var(--c-title)';
         titleElement.style.paddingLeft = '20px';
 
         navWrap.appendChild(titleElement);
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', addPageTitleText);
-    } else {
-        addPageTitleText();
-    }
+    const observer = new MutationObserver(() => {
+        if (document.querySelector('.global-nav-bar-wrap')) {
+            observer.disconnect();
+            addPageTitleText();
+        }
+    });
+
+    observer.observe(document, { childList: true, subtree: true });
 }
 
 function removeConflictJQuery() {
@@ -1307,7 +1346,11 @@ function initializeBottomNavigationBar() {
         return;
     }
 
-    if (window.location.href === 'https://course.pku.edu.cn/') {
+    if (/^https:\/\/course\.pku\.edu\.cn\/webapps\/login\//.test(window.location.href)) {
+        return;
+    }
+
+    if (window.location.href === 'https://course.pku.edu.cn/' || window.location.href === 'https://course.pku.edu.cn/webapps/bb-sso-BBLEARN/login.html') {
         return;
     }
 
@@ -1320,10 +1363,6 @@ function initializeBottomNavigationBar() {
     }
 
     let bottomNav = null;
-
-    const shouldShowBottomNav = () => {
-        return window.innerWidth < 1037;
-    };
 
     const createBottomNav = () => {
         if (bottomNav) {
@@ -1351,8 +1390,8 @@ function initializeBottomNavigationBar() {
 
         const navItems = [
             { name: '主页', url: 'https://course.pku.edu.cn', icon: homeIcon },
-            { name: '成绩', url: 'https://course.pku.edu.cn/webapps/bb-social-learning-BBLEARN/execute/mybb?cmd=display&toolId=MyGradesOnMyBb_____MyGradesTool&extraParams=override_stream=mygrades', icon: gradeIcon },
-            { name: '通知', url: 'https://course.pku.edu.cn/webapps/bb-social-learning-BBLEARN/execute/mybb?cmd=display&toolId=AlertsOnMyBb_____AlertsTool', icon: notificationIcon },
+            { name: '成绩', url: 'https://course.pku.edu.cn/webapps/streamViewer/streamViewer?cmd=view&streamName=mygrades', icon: gradeIcon },
+            { name: '通知', url: 'https://course.pku.edu.cn/webapps/streamViewer/streamViewer?cmd=view&streamName=alerts', icon: notificationIcon },
             { name: '公告', url: 'https://course.pku.edu.cn/webapps/blackboard/execute/announcement?method=search&context=mybb&handle=my_announcements&returnUrl=/webapps/portal/execute/tabs/tabAction?tab_tab_group_id=_1_1&tabId=_1_1&forwardUrl=index.jsp', icon: announcementIcon }
         ];
 
@@ -1405,20 +1444,14 @@ function initializeBottomNavigationBar() {
     };
 
     const updateBottomNavVisibility = () => {
-        if (shouldShowBottomNav()) {
-            if (!bottomNav) {
-                createBottomNav();
-            }
-            if (!document.getElementById('pkuArtBottomNav')) {
-                document.body.appendChild(bottomNav);
-            }
-            bottomNav.style.display = 'flex';
-        } else {
-            if (bottomNav && bottomNav.parentNode) {
-                bottomNav.style.display = 'none';
-            }
+        if (!bottomNav) {
+            createBottomNav();
         }
-    };
+        if (!document.getElementById('pkuArtBottomNav')) {
+            document.body.appendChild(bottomNav);
+        }
+        bottomNav.style.display = 'flex';
+    }
 
     const initBottomNav = () => {
         updateBottomNavVisibility();
@@ -1435,9 +1468,7 @@ function initializeBottomNavigationBar() {
         initBottomNav();
         }
     });
-
     observer.observe(document.documentElement, { childList: true });
-    window.addEventListener('resize', updateBottomNavVisibility);
 }
 
 function convertBlankLinksToTop() {
@@ -1475,11 +1506,11 @@ function setViewportMeta() {
 }
 
 async function persistUserInfo() {
-    if (import.meta.env.BUILD_TARGET === 'userscript') {
+    if (import.meta.env.MODE !== 'tauri') {
         return
     }
 
-    const store = await Store.load('user.json');
+    const store = await getStore();
 
     const origOpen = XMLHttpRequest.prototype.open;
     const origSend = XMLHttpRequest.prototype.send;
@@ -1494,6 +1525,7 @@ async function persistUserInfo() {
             localStorage.setItem('pku-art-user-name', userName);
             localStorage.setItem('pku-art-password', password);
             store.set('user', { 'userName': userName, 'password': password });
+            store.save();
             const originalOnReadyStateChange = this.onreadystatechange;
 
             this.onreadystatechange = function() {
@@ -1522,23 +1554,28 @@ async function persistUserInfo() {
 }
 
 async function autoLogin() {
-    if (import.meta.env.BUILD_TARGET === 'userscript') {
+    if (import.meta.env.MODE !== 'tauri') {
         return
     }
 
-    if (document.cookie.includes('course_login=true')) {
+    console.debug(window.location.href, document.cookie);
+
+    if (document.cookie.includes('course_login=true') && Date.now() - document.cookie.match(/course_last_login=([^;]*)/)[1] < 1000 * 60 * 60 * 3) {
         return
     }
 
     if (!/^https:\/\/course\.pku\.edu\.cn\/\S*$/.test(window.location.href)) {
         return
     }
-    const store = await Store.load('user.json');
+
+    const store = await getStore();
     const user = await store.get('user');
     if (user) {
         const userName = user.userName;
         const password = user.password;
-        const res = await fetch('https://iaaa.pku.edu.cn/iaaa/oauthlogin.do', {
+        console.debug('autoLogin', userName, password);
+
+        const res = await fetch_rs('https://iaaa.pku.edu.cn/iaaa/oauthlogin.do', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -1551,12 +1588,342 @@ async function autoLogin() {
             const timestamp = Date.now();
             document.cookie = `course_login=true; domain=.pku.edu.cn; path=/`;
             document.cookie = `course_last_login=${timestamp}; domain=.pku.edu.cn; path=/`;
-            window.location.href = `https://course.pku.edu.cn/webapps/bb-sso-BBLEARN/execute/authValidate/campusLogin?_rand=${Math.random()}&token=${token}`;
+            // window.location.href = `https://course.pku.edu.cn/webapps/bb-sso-BBLEARN/execute/authValidate/campusLogin?_rand=${Math.random()}&token=${token}`;
+            await fetch(`https://course.pku.edu.cn/webapps/bb-sso-BBLEARN/execute/authValidate/campusLogin?_rand=${Math.random()}&token=${token}`);
+            location.replace(location.href);
+            console.debug('Login Successful', JSON.stringify(data));
+        } else {
+            console.warn('Login Failed', JSON.stringify(data));
         }
     }
 }
 
+async function portalLogin() {
+    if (import.meta.env.MODE !== 'tauri') {
+        return
+    }
+
+    if (document.cookie.includes('portal_login=true') && Date.now() - document.cookie.match(/portal_last_login=([^;]*)/)[1] < 1000 * 60 * 60 * 3) {
+        return
+    }
+
+    if (!/^https:\/\/course\.pku\.edu\.cn\/webapps\/streamViewer\/streamViewer\S*streamName=mygrades\S*$/.test(window.location.href)) {
+        return
+    }
+
+    console.log('portalLogin');
+
+    const store = await getStore();
+    const user = await store.get('user');
+    if (user) {
+        const userName = user.userName;
+        const password = user.password;
+        console.debug('portalLogin', userName, password);
+
+        const res = await fetch_rs('https://iaaa.pku.edu.cn/iaaa/oauthlogin.do', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `appid=portal2017&userName=${userName}&password=${password}&randCode=&smsCode=&otpCode=&remTrustChk=false&redirUrl=https%3A%2F%2Fportal.pku.edu.cn%2Fportal2017%2FssoLogin.do`
+        })
+        const data = await res.json();
+        if (data.success === true) {
+            const token = data.token;
+            const timestamp = Date.now();
+            document.cookie = `portal_login=true; domain=.pku.edu.cn; path=/`;
+            document.cookie = `portal_last_login=${timestamp}; domain=.pku.edu.cn; path=/`;
+            await fetch_rs(`https://portal.pku.edu.cn/portal2017/ssoLogin.do?_rand=${Math.random()}&token=${token}`);
+            console.debug('Login Successful', JSON.stringify(data));
+        } else {
+            console.warn('Login Failed', JSON.stringify(data));
+        }
+    }
+}
+
+async function displayGrades() {
+    const stream_wrapper = document.querySelector('div.left_stream_wrapper');
+    stream_wrapper.style.display = 'none';
+    const loadingElement = document.createElement('div');
+    loadingElement.id = 'pkuArtGradesLoading';
+    loadingElement.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 10000;
+        color: white;
+        font-size: 18px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    `;
+    loadingElement.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <div style="width: 40px; height: 40px; border: 4px solid rgba(255, 255, 255, 0.3); border-top: 4px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px;"></div>
+            <span>正在加载成绩数据...</span>
+        </div>
+        <style>
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        </style>
+    `;
+    document.body.appendChild(loadingElement);
+
+    if (import.meta.env.MODE !== 'tauri') {
+        return
+    }
+
+    try {
+        await portalLogin();
+        await fetch_rs('https://portal.pku.edu.cn/portal2017/util/portletRedir.do?portletId=myscores');
+        const res = await fetch_rs('https://portal.pku.edu.cn/publicQuery/ctrl/topic/myScore/retrScores.do');
+        const data = await res.json();
+        console.log(JSON.stringify(data.cjxx[0].list));
+        const container = document.querySelector('div.stream_page');
+
+        data.cjxx.forEach(xq => {
+            const xqTitleEl = document.createElement('h2');
+            xqTitleEl.className = 'xq-title';
+            xqTitleEl.textContent = `${xq.xnd}学年度${xq.xq}学期`;
+
+            const list = document.createElement('div');
+            list.classList.add('course-list');
+            xq.list.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'course-item';
+
+                const creditNumEl = document.createElement('div');
+                creditNumEl.className = 'credit-number';
+                creditNumEl.textContent = item.xf;
+                itemEl.appendChild(creditNumEl);
+
+                const creditLabelEl = document.createElement('div');
+                creditLabelEl.className = 'credit-label';
+                creditLabelEl.textContent = '学分';
+                itemEl.appendChild(creditLabelEl);
+
+                const nameEl = document.createElement('div');
+                nameEl.className = 'course-name';
+                nameEl.textContent = item.kcmc;
+                itemEl.appendChild(nameEl);
+
+                const typeEl = document.createElement('div');
+                typeEl.className = 'course-type';
+                typeEl.textContent = item.kclbmc;
+                itemEl.appendChild(typeEl);
+
+                const scoreEl = document.createElement('div');
+                scoreEl.className = 'score';
+                scoreEl.textContent = item.xqcj;
+
+                itemEl.appendChild(scoreEl);
+                list.appendChild(itemEl);
+            });
+            container.appendChild(xqTitleEl);
+            container.appendChild(list);
+        });
+    } finally {
+        if (loadingElement.parentNode) {
+            loadingElement.parentNode.removeChild(loadingElement);
+        }
+    }
+}
+
+function insertNav() {
+    if (!(/^https:\/\/course\.pku\.edu\.cn\/webapps\/streamViewer\/streamViewer/.test(window.location.href) && window.self == window.top)) {
+        return
+    }
+
+    const insert = () => {
+        if (document.querySelector('#globalNavPageNavArea')) {
+            return;
+        }
+        const globalNavPageNavArea = document.createElement('div');
+        globalNavPageNavArea.id = 'globalNavPageNavArea';
+        globalNavPageNavArea.role = 'navigation';
+        globalNavPageNavArea.ariaLabel = '全局导航';
+        globalNavPageNavArea.style.cssText = 'margin: 0px; z-index: 500;'
+        document.body.appendChild(globalNavPageNavArea);
+
+        const globalNavBarWrap = document.createElement('div');
+        globalNavBarWrap.className = 'global-nav-bar-wrap';
+        globalNavBarWrap.innerHTML = `
+<div class="global-nav-bar logout" role="region" aria-labelledby="topframe.logout.label">
+    <a id="topframe.logout.label" href="/webapps/login/?action=logout" target="_top" class="nav-link logout-link" title="注销"> 注销</a>
+</div>
+<div id="global-nav" class="global-nav-bar" role="navigation" aria-label="用户导航" data-preview="false">
+    <div class="hideoff">全局菜单</div>
+    <button id="global-nav-link" class="nav-link u_floatThis-right" href="#global-nav-flyout" aria-haspopup="true" aria-controls="global-nav-flyout" tabindex="1" accesskey="m" title="打开全局导航菜单"></button>
+</div>
+`;
+        document.body.appendChild(globalNavBarWrap);
+    }
+
+    const observer = new MutationObserver(() => {
+        if (document.body) {
+            observer.disconnect();
+            insert();
+        }
+    });
+    observer.observe(document, { childList: true, subtree: true});
+}
+
+function insertGradesHeader() {
+    const initHeader = () => {
+        if (document.querySelector('ul.stream_list_filter li.stream_filterlinks.mobile_only')) {
+            return
+        }
+        const header = document.querySelector('ul.stream_list_filter');
+        const li = document.createElement('li');
+        li.classList.add('stream_filterlinks');
+        li.classList.add('mobile_only');
+        li.innerHTML = '<a> 出分进度 </a>';
+        li.onclick = displayGrades;
+        header.appendChild(li);
+    }
+
+    const observer = new MutationObserver(() => {
+        if (document.querySelectorAll('ul.stream_list_filter li.stream_filterlinks').length >= 2) {
+            observer.disconnect();
+            initHeader();
+        }
+    })
+    observer.observe(document, { childList: true, subtree: true });
+}
+
+function initializeSettingPage() {
+    if (!/https:\/\/course\.pku\.edu\.cn\/webapps\/blackboard\/execute\/personalInfo/.test(window.location.href)) {
+        return
+    }
+
+    const updateThemeStatusText = () => {
+        const themeStatusText = document.getElementById('themeStatusText');
+        if (!themeStatusText) return;
+        
+        const currentMode = window.PKUArtThemeManager?.getCurrentMode() || 'auto';
+        const isDark = window.PKUArtThemeManager?.isDarkMode() || false;
+        
+        let statusText = '跟随系统';
+        if (currentMode === 'light') {
+            statusText = '日间模式';
+        } else if (currentMode === 'dark') {
+            statusText = '黑夜模式';
+        } else if (currentMode === 'auto') {
+            statusText = '跟随系统';
+        }
+        
+        themeStatusText.textContent = statusText;
+    };
+
+    const cycleThemeMode = () => {
+        const currentMode = window.PKUArtThemeManager?.getCurrentMode() || 'auto';
+        let nextMode = 'light';
+        
+        if (currentMode === 'light') {
+            nextMode = 'dark';
+        } else if (currentMode === 'dark') {
+            nextMode = 'auto';
+        }
+
+        if (window.PKUArtThemeManager) {
+            window.PKUArtThemeManager.setTheme(nextMode);
+            updateThemeStatusText();
+        }
+    };
+
+    const insert = () => {
+        if (document.querySelector('.pku-art-container')) {
+            return
+        }
+
+        const locationPane = document.querySelector('.locationPane');
+        const settingPanel = document.createElement('div');
+        const userName = document.querySelector('#global-nav-link img').nextSibling.textContent
+        settingPanel.innerHTML = `
+<div class="pku-art-container">
+    <div class="card user-profile">
+        <div class="user-avatar">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </div>
+        <div class="user-info">
+            <h2 id="display-username">${userName}</h2>
+        </div>
+    </div>
+    <div class="card">
+        <div class="setting-item" id="themeToggleRow">
+            <div class="item-label">
+                <span>外观模式</span>
+            </div>
+            <div class="item-value">
+                <span id="themeStatusText">跟随系统</span>
+            </div>
+        </div>
+        <div class="setting-item">
+            <div class="item-label">
+                <span>日志</span>
+            </div>
+            <div class="item-value">
+            <span id="saveLogsText">保存日志</span>
+            </div>
+        </div>
+        <div class="setting-item">
+            <div class="item-label">
+                <span></span>
+            </div>
+            <div class="item-value">
+            <span id="clearLogsText">清除日志</span>
+            </div>
+        </div>
+    </div>
+    <button class="btn btn-danger" id="logoutBtn"><a href="/webapps/login/?action=logout">退出登录</a></button>
+</div>`;
+        locationPane.appendChild(settingPanel);
+
+        updateThemeStatusText();
+        
+        const themeToggleRow = settingPanel.querySelector('#themeToggleRow');
+        if (themeToggleRow) {
+            themeToggleRow.addEventListener('click', () => {
+                cycleThemeMode();
+            });
+        }
+
+        const saveLogsText = document.getElementById('saveLogsText');
+        if (saveLogsText) {
+            saveLogsText.addEventListener('click', async () => {
+                await saveLogs();
+            });
+        }
+
+        const clearLogsText = document.getElementById('clearLogsText');
+        if (clearLogsText) {
+            clearLogsText.addEventListener('click', async () => {
+                await clearLogs();
+            });
+        }
+    };
+
+    window.addEventListener('pku-art-theme-change', updateThemeStatusText);
+
+    const observer = new MutationObserver(() => {
+        if (document.querySelector('.locationPane')) {
+            observer.disconnect();
+            insert();
+        }
+    });
+
+    observer.observe(document, { childList: true, subtree: true });
+}
+
+
 export {
+    insertNav,
     initializeLogoNavigation,
     ensureSidebarVisible,
     overrideSiteIcons,
@@ -1574,6 +1941,7 @@ export {
     removeConflictJQuery,
     initializeBottomNavigationBar,
     formatAnnouncementTime,
+    initializeSettingButton,
     initializeMenuToggleButton,
     convertBlankLinksToTop,
     initializePageTitleText,
@@ -1581,4 +1949,6 @@ export {
     removeBootstrap,
     persistUserInfo,
     autoLogin,
+    insertGradesHeader,
+    initializeSettingPage
 };

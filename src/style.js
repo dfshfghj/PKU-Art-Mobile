@@ -2,6 +2,7 @@ import mainStyles from './css/main.css?inline';
 import arcoPaletteStyles from './css/arco-palette.css?inline';
 import iaaaOAuthPageStyles from './css/iaaaOAuthPage.css?inline';
 import courseHeaderStyles from './css/components/courseHeader.css?inline';
+import courseFooterStyles from './css/components/courseFooter.css?inline';
 import courseListStyles from './css/components/courseList.css?inline';
 import courseTabsStyles from './css/components/courseTabs.css?inline';
 import courseLoginPageStyles from './css/courseLoginPage.css?inline';
@@ -16,6 +17,7 @@ import courseOtherStyles from './css/courseOther.css?inline';
 import courseClassGradeStyles from './css/courseClassGrade.css?inline';
 import courseListContentStyles from './css/courseListContent.css?inline';
 import courseViewAttemptStyles from './css/courseViewAttempt.css?inline';
+import courseStreamViewerStyles from './css/courseStreamViewer.css?inline';
 import courseToolFrameStyles from './css/courseToolFrame.css?inline';
 import courseToolAlertStyles from './css/courseToolAlert.css?inline';
 import courseToolGradeStyles from './css/courseToolGrade.css?inline';
@@ -33,6 +35,7 @@ import courseExternalLinkStyles from './css/courseExternalLink.css?inline';
 import courseToolCalendarStyles from './css/courseToolCalendar.css?inline';
 import courseOralTrainingStyles from './css/courseOralTraining.css?inline';
 import courseViewGroupStyles from './css/courseViewGroup.css?inline';
+import courseSettingStyles from './css/courseSetting.css?inline';
 import electiveSsoLoginStyles from './css/electiveSsoLogin.css?inline';
 import electiveMainStyles from './css/electiveMain.css?inline';
 import electivePlanStyles from './css/electivePlan.css?inline';
@@ -99,13 +102,13 @@ const styleRules = [
             /^https:\/\/course\.pku\.edu\.cn\/webapps\/portal\/\S*$/,
         ],
         excludePatterns: [],
-        styleContent: [courseHomePageStyles, courseHeaderStyles],
+        styleContent: [courseHomePageStyles, courseHeaderStyles, courseFooterStyles],
         fileName: 'courseHomePage.css',
     },
     {
         patterns: [/^https:\/\/course\.pku\.edu\.cn\/webapps\/\S*course_id\S*$/],
         excludePatterns: [],
-        styleContent: [courseContentStyles, courseHeaderStyles],
+        styleContent: [courseContentStyles, courseHeaderStyles, courseFooterStyles],
         fileName: 'courseContent.css',
     },
     {
@@ -168,7 +171,7 @@ const styleRules = [
     {
         patterns: [/^https:\/\/course\.pku\.edu\.cn\/webapps\S*toolId\S*$/],
         excludePatterns: [],
-        styleContent: [courseToolFrameStyles, courseHeaderStyles],
+        styleContent: [courseToolFrameStyles, courseHeaderStyles, courseFooterStyles],
         fileName: 'courseToolFrame.css',
     },
     {
@@ -216,7 +219,7 @@ const styleRules = [
             /^https:\/\/course\.pku\.edu\.cn\/webapps\/\S*playVideo\S*$/,
         ],
         excludePatterns: [],
-        styleContent: [courseGlobalPageStyles, courseHeaderStyles],
+        styleContent: [courseGlobalPageStyles, courseHeaderStyles, courseFooterStyles],
         fileName: 'courseGlobalPage.css',
     },
     {
@@ -276,6 +279,12 @@ const styleRules = [
         excludePatterns: [],
         styleContent: courseViewGroupStyles,
         fileName: 'courseViewGroup.css',
+    },
+    {
+        patterns: [/^https:\/\/course\.pku\.edu\.cn\/webapps\/blackboard\/execute\/personalInfo/],
+        excludePatterns: [],
+        styleContent: [courseSettingStyles, courseHeaderStyles, courseFooterStyles, courseGlobalPageStyles],
+        fileName: 'courseSetting.css',
     },
     // 选课网，已完成，待选课时进行验证
     {
@@ -353,6 +362,10 @@ function applyStylesForCurrentPage(url = currentUrl) {
             console.log(`[PKU Art] ${fileName} imported`);
         }
     });
+
+    if (/^https:\/\/course\.pku\.edu\.cn\/webapps\/streamViewer\/streamViewer/.test(window.location.href) && window.self == window.top) {
+        injectStyles([courseStreamViewerStyles, courseHeaderStyles, courseFooterStyles], 'courseStreamViewer.css');
+    }
 }
 
 export default applyStylesForCurrentPage;

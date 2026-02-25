@@ -88,6 +88,10 @@ html,
     border: none;
 }
 
+#openSettings_alerts {
+    position: absolute;
+}
+
 #streamHeader_alerts span.current-page,
 #streamHeader_alerts span.icon {
     display: none;

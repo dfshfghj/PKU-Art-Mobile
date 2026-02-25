@@ -1,6 +1,8 @@
+import './logger.js';
 import applyStylesForCurrentPage from './style.js';
 import { initializeThemeManager, initializeThemeToggleButton } from './theme.js';
 import {
+    insertNav,
     initializeLogoNavigation,
     ensureSidebarVisible,
     overrideSiteIcons,
@@ -18,6 +20,7 @@ import {
     removeConflictJQuery,
     initializeBottomNavigationBar,
     formatAnnouncementTime,
+    initializeSettingButton,
     initializeMenuToggleButton,
     initializePageTitleText,
     convertBlankLinksToTop,
@@ -25,8 +28,11 @@ import {
     removeBootstrap,
     persistUserInfo,
     autoLogin,
+    insertGradesHeader,
+    initializeSettingPage,
 } from './utils.js';
 
+insertNav();
 applyStylesForCurrentPage();
 initializeThemeManager();
 initializeThemeToggleButton();
@@ -47,10 +53,13 @@ removeConflictJQuery();
 removeBootstrap();
 initializeBottomNavigationBar();
 formatAnnouncementTime();
+initializeSettingButton();
 initializeMenuToggleButton();
 initializePageTitleText();
 convertBlankLinksToTop();
 setViewportMeta();
 persistUserInfo();
 autoLogin();
+insertGradesHeader();
+initializeSettingPage();
 // insertHTMLForDebug();

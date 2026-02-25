@@ -141,6 +141,7 @@ html {
 
 * {
     outline: none !important;
+    -webkit-tap-highlight-color: transparent !important;
 }
 
 @keyframes fadeInUpTransition {
@@ -320,4 +321,11 @@ html {
     width: 28px;
     height: 28px;
     display: block;
+}
+
+@media (min-width: 800px) { 
+    .mobile_only {
+        display: none !important;
+    }
+
 }
