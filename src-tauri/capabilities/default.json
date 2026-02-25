@@ -30,10 +30,31 @@
     {
       "identifier": "http:default",
       "allow": [
-          {
-            "url": "https://*.pku.edu.cn"
-          }
-        ]
-      }
+        {
+          "url": "https://*.pku.edu.cn"
+        }
+      ]
+    },
+    "log:default",
+    "fs:default",
+    "fs:allow-copy-file",
+    "fs:allow-read-dir",
+    "fs:allow-read",
+    "fs:allow-remove",
+    "fs:allow-truncate",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        {
+          "path": "$APPLOG"
+        },
+        {
+          "path": "$APPLOG/**"
+        },
+        {
+          "path": "$DOWNLOAD/**"
+        }
+      ]
+    }
   ]
 }

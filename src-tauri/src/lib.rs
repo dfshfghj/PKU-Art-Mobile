@@ -23,7 +23,22 @@ use util::get_pake_config;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run_app() {
     let (pake_config, tauri_config) = get_pake_config();
-    let tauri_app = tauri::Builder::default().plugin(tauri_plugin_store::Builder::new().build());
+    let tauri_app = tauri::Builder::default()
+        .plugin(tauri_plugin_fs::init())
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .target(tauri_plugin_log::Target::new(
+                    tauri_plugin_log::TargetKind::LogDir {
+                        file_name: Some("logs".to_string()),
+                    },
+                ))
+                .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
+                .max_file_size(10000000)
+                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
+                .level(tauri_plugin_log::log::LevelFilter::Debug)
+                .build(),
+        )
+        .plugin(tauri_plugin_store::Builder::new().build());
 
     #[cfg(desktop)]
     let show_system_tray = pake_config.show_system_tray();
