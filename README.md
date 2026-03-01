@@ -1,5 +1,80 @@
 <div align="center">
 
+# PKU Art Mobile
+
+</div>
+
+PKU Art 的移动端适配，尽可能做到多端兼容。可以使用 js 脚本安装，也可以在 release 中下载基于 Tauri 的 App （目前只有 Android ）。
+
+<details>
+<summary> 点击展开 </summary>
+
+![](https://raw.githubusercontent.com/dfshfghj/PKU-Art-Mobile/refs/heads/main/README.assets/mobile-1.png)
+
+![](https://raw.githubusercontent.com/dfshfghj/PKU-Art-Mobile/refs/heads/main/README.assets/mobile-2.png)
+
+![](https://raw.githubusercontent.com/dfshfghj/PKU-Art-Mobile/refs/heads/main/README.assets/mobile-3.png)
+
+![](https://raw.githubusercontent.com/dfshfghj/PKU-Art-Mobile/refs/heads/main/README.assets/mobile-4.png)
+
+![](https://raw.githubusercontent.com/dfshfghj/PKU-Art-Mobile/refs/heads/main/README.assets/mobile-5.png)
+
+![](https://raw.githubusercontent.com/dfshfghj/PKU-Art-Mobile/refs/heads/main/README.assets/mobile-6.png)
+
+![](https://raw.githubusercontent.com/dfshfghj/PKU-Art-Mobile/refs/heads/main/README.assets/mobile-7.png)
+
+![](https://raw.githubusercontent.com/dfshfghj/PKU-Art-Mobile/refs/heads/main/README.assets/mobile-8.png)
+
+</details>
+
+App 中新增的功能：
+
++ 自动登录；
++ 出分进度查询；
++ 日志；
++ （以后也许会有课表）
+
+## 开发
+
+脚本模式，提供热更新：
+```
+npm run dev
+```
+
+构建适用于浏览器的脚本：
+```
+npm run build
+```
+
+构建Tauri App：
+```
+npm run build:tauri
+
+npm run build:tauri-mobile // 移动端
+```
+
+之后
+```
+npm run tauri dev
+
+npm run tauri android dev // 移动端
+```
+
+构建：
+```
+npm run tauri build
+
+npm run tauri android build // 移动端
+```
+
+<div align="center">
+
+## 以下是原项目README
+
+</div>
+
+<div align="center">
+
 ![cover](https://cdn.arthals.ink/bed/2025/11/cover-1b32229620764c46a2717d2b6291d93b.jpg)
 
 # 🎨 PKU Art
