@@ -254,4 +254,12 @@ span.open_stream_settings {
         margin: 0;
         margin-right: 60px;
     }
+
+    span.open_stream_settings {
+        display: none !important;
+    }
+
+    span.inlineContextMenu {
+        display: block;
+    }
 }

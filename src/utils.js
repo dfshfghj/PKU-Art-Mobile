@@ -156,7 +156,7 @@ function removeCourseSerialNumbers() {
         const stripAlertSerials = () => {
             const courseLinks = document.querySelectorAll('#streamHeader_alerts a');
             courseLinks.forEach((courseLink) => {
-                courseLink.innerHTML = courseLink.innerHTML.replace(/\(\d+-\d+学年第\d学期\)/, '');
+                courseLink.innerHTML = courseLink.innerHTML.replace(/\(\d+-\d+学年第\d学期.*?\)/, '');
             });
             if (courseLinks.length !== 0 && alertCleanupTimer) {
                 clearInterval(alertCleanupTimer);
@@ -176,7 +176,7 @@ function removeCourseSerialNumbers() {
     const stripAlertSerials = () => {
         const courseLinks = document.querySelectorAll('#streamDetailHeaderRightClickable a , .stream_area_name, .coursePath a , a#courseMenu_link, .announcementInfo p');
         courseLinks.forEach((courseLink) => {
-            courseLink.innerHTML = courseLink.innerHTML.replace(/\(\d+-\d+学年第\d学期\)/, '');
+            courseLink.innerHTML = courseLink.innerHTML.replace(/\(\d+-\d+学年第\d学期.*?\)/, '');
         });
         if (courseLinks.length !== 0 && alertCleanupTimer) {
             clearInterval(alertCleanupTimer);
@@ -1624,6 +1624,7 @@ async function portalLogin() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36'
             },
             body: `appid=portal2017&userName=${userName}&password=${password}&randCode=&smsCode=&otpCode=&remTrustChk=false&redirUrl=https%3A%2F%2Fportal.pku.edu.cn%2Fportal2017%2FssoLogin.do`
         })
@@ -1870,13 +1871,6 @@ function initializeSettingPage() {
             </div>
             <div class="item-value">
             <span id="saveLogsText">保存日志</span>
-            </div>
-        </div>
-        <div class="setting-item">
-            <div class="item-label">
-                <span></span>
-            </div>
-            <div class="item-value">
             <span id="clearLogsText">清除日志</span>
             </div>
         </div>

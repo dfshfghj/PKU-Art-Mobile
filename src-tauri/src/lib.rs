@@ -36,6 +36,7 @@ pub fn run_app() {
                 .max_file_size(10000000)
                 .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
                 .level(tauri_plugin_log::log::LevelFilter::Debug)
+                .level_for("reqwest", tauri_plugin_log::log::LevelFilter::Trace)
                 .build(),
         )
         .plugin(tauri_plugin_store::Builder::new().build());

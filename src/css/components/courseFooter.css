@@ -6,6 +6,6 @@
 
 @media (max-width: 1037px) { 
     #globalNavPageContentArea > :last-child {
-        padding-bottom: 60px;
+        padding-bottom: calc(var(--safe-area-inset-bottom, 0px) + 60px);
     }
 }
