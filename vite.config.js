@@ -15,6 +15,7 @@ const date = new Date().toLocaleDateString('zh-CN', {
 
 // https://vitejs.dev/config/
 export default defineConfig({
+    assetsInclude: ['**/*.bcmap', '**/*.pfb', '**/*.icc', '**/*.wasm', '**/*.ftl'],
     plugins: [
         AutoImport({
             imports: [util.unimportPreset],

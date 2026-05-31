@@ -113,34 +113,15 @@ embed {
     white-space: nowrap;
 }
 
-.pku-art-pdf-pages {
-    display: grid;
-    gap: 18px;
-    padding-top: 18px;
-}
-
-.pku-art-pdf-page-card {
-    background: color-mix(in srgb, var(--c-background) 75%, transparent);
-    border: 1px solid var(--c-border);
-    border-radius: 12px;
-    padding: 14px;
-    overflow: auto;
-}
-
-.pku-art-pdf-page-label {
-    color: var(--c-text);
-    opacity: 0.75;
-    margin-bottom: 10px;
-    font-size: 14px;
-}
-
-.pku-art-pdf-canvas {
+.pku-art-pdf-frame {
     display: block;
-    max-width: 100%;
-    margin: 0 auto;
+    width: 100%;
+    height: min(1000px, 80vh);
+    margin-top: 14px;
+    border: 0;
     border-radius: 8px;
     background: #fff;
-    box-shadow: 0 10px 30px rgb(0 0 0 / 8%);
+    overflow: hidden;
 }
 
 @media (max-width: 720px) {
@@ -162,7 +143,7 @@ embed {
         flex: 1 1 140px;
     }
 
-    .pku-art-pdf-page-card {
-        padding: 10px;
+    .pku-art-pdf-frame {
+        height: 75vh;
     }
 }

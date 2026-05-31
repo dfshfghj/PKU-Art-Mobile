@@ -3,6 +3,7 @@ import path from 'path';
 import { execSync } from 'child_process';
 
 execSync('vite build --mode tauri', { stdio: 'inherit' });
+execSync('vite build --config vite.tauri-pdf.config.js --mode tauri', { stdio: 'inherit' });
 
 const distDir = path.join(process.cwd(), 'dist');
 const userJsFiles = fs.readdirSync(distDir).filter(file => file.endsWith('.user.js'));
@@ -50,3 +51,13 @@ const customJsPath = path.join(process.cwd(), 'src-tauri', 'src', 'inject', 'cus
 fs.writeFileSync(customJsPath, customJsContent, 'utf8');
 
 console.log('successfully copy to tauri:  src-tauri/src/inject/custom.js');
+
+const pdfViewerJsPath = path.join(process.cwd(), 'dist-tauri-inject', 'pdf-viewer.js');
+if (!fs.existsSync(pdfViewerJsPath)) {
+    throw new Error('No pdf-viewer.js file found in dist-tauri-inject directory');
+}
+
+const tauriPdfViewerJsPath = path.join(process.cwd(), 'src-tauri', 'src', 'inject', 'pdf-viewer.js');
+fs.copyFileSync(pdfViewerJsPath, tauriPdfViewerJsPath);
+
+console.log('successfully copy to tauri:  src-tauri/src/inject/pdf-viewer.js');

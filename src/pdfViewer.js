@@ -1,11 +1,204 @@
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
-import pdfWorkerUrl from 'pdfjs-dist/legacy/build/pdf.worker.mjs?url';
+import viewerHtml from './pdfjs-official/web/viewer.html?raw';
+import viewerCss from './pdfjs-official/web/viewer.css?raw';
+import viewerModule from './pdfjs-official/web/viewer.mjs?raw';
+import pdfModule from './pdfjs-official/build/pdf.mjs?raw';
+import pdfWorkerModule from './pdfjs-official/build/pdf.worker.mjs?raw';
+import pdfSandboxModule from './pdfjs-official/build/pdf.sandbox.mjs?raw';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+const viewerImages = import.meta.glob('./pdfjs-official/web/images/*', {
+    query: '?inline',
+    import: 'default',
+    eager: true,
+});
+
+const viewerResourceUrls = {
+    ...import.meta.glob('./pdfjs-official/web/cmaps/*.bcmap', {
+        query: '?url&inline',
+        import: 'default',
+        eager: true,
+    }),
+    ...import.meta.glob('./pdfjs-official/web/iccs/*.icc', {
+        query: '?url&inline',
+        import: 'default',
+        eager: true,
+    }),
+    ...import.meta.glob('./pdfjs-official/web/locale/**/*.json', {
+        query: '?url&inline',
+        import: 'default',
+        eager: true,
+    }),
+    ...import.meta.glob('./pdfjs-official/web/locale/**/*.ftl', {
+        query: '?url&inline',
+        import: 'default',
+        eager: true,
+    }),
+    ...import.meta.glob('./pdfjs-official/web/standard_fonts/*.{pfb,ttf}', {
+        query: '?url&inline',
+        import: 'default',
+        eager: true,
+    }),
+    ...import.meta.glob('./pdfjs-official/web/wasm/*.wasm', {
+        query: '?url&inline',
+        import: 'default',
+        eager: true,
+    }),
+};
 
 const FILE_VIEW_URL_PATTERN = /^https:\/\/course\.pku\.edu\.cn\/webapps\/\S*content\/file\?cmd=view\S*$/;
 const PDF_VIEWER_ROOT_CLASS = 'pku-art-pdf-viewer';
 const PDF_TARGET_SELECTOR = 'embed, iframe, object';
+const PDFJS_RESOURCE_ROOT = 'pku-art-pdfjs-resource://web/';
+
+const OFFICIAL_VIEWER_URLS = {
+    pdf: null,
+    worker: null,
+    sandbox: null,
+};
+
+const PDFJS_RUNTIME_POLYFILLS = `
+if (!Uint8Array.prototype.toHex) {
+  Object.defineProperty(Uint8Array.prototype, "toHex", {
+    value: function toHex() {
+      let result = "";
+      for (let i = 0; i < this.length; i += 1) {
+        result += this[i].toString(16).padStart(2, "0");
+      }
+      return result;
+    },
+    configurable: true,
+    writable: true
+  });
+}
+if (typeof Map.prototype.getOrInsertComputed !== "function") {
+  Object.defineProperty(Map.prototype, "getOrInsertComputed", {
+    value: function getOrInsertComputed(key, callbackFn) {
+      if (!this.has(key)) {
+        this.set(key, callbackFn(key));
+      }
+      return this.get(key);
+    },
+    configurable: true,
+    writable: true
+  });
+}
+if (typeof Promise.withResolvers !== "function") {
+  Promise.withResolvers = function withResolvers() {
+    let resolve;
+    let reject;
+    const promise = new Promise((promiseResolve, promiseReject) => {
+      resolve = promiseResolve;
+      reject = promiseReject;
+    });
+    return { promise, resolve, reject };
+  };
+}
+if (typeof Math.sumPrecise !== "function") {
+  Math.sumPrecise = function sumPrecise(numbers) {
+    return Array.from(numbers).reduce((sum, value) => sum + value, 0);
+  };
+}
+`;
+
+function createScriptUrl(source, options = {}) {
+    const script = options.withPdfJsPolyfills ? `${PDFJS_RUNTIME_POLYFILLS}\n${source}` : source;
+    return URL.createObjectURL(new Blob([script], { type: 'text/javascript' }));
+}
+
+function getOfficialViewerUrls() {
+    if (OFFICIAL_VIEWER_URLS.pdf) {
+        return OFFICIAL_VIEWER_URLS;
+    }
+
+    OFFICIAL_VIEWER_URLS.pdf = createScriptUrl(pdfModule, { withPdfJsPolyfills: true });
+    OFFICIAL_VIEWER_URLS.worker = createScriptUrl(pdfWorkerModule, { withPdfJsPolyfills: true });
+    OFFICIAL_VIEWER_URLS.sandbox = createScriptUrl(pdfSandboxModule, { withPdfJsPolyfills: true });
+    return OFFICIAL_VIEWER_URLS;
+}
+
+function createOfficialViewerUrl(pdfObjectUrl) {
+    const urls = getOfficialViewerUrls();
+    const css = inlineViewerCssImages(viewerCss);
+    const module = patchOfficialViewerModule(viewerModule)
+        .replace('value: "compressed.tracemonkey-pldi-09.pdf"', `value: ${JSON.stringify(pdfObjectUrl)}`)
+        .replace('value: "../build/pdf.worker.mjs"', `value: ${JSON.stringify(urls.worker)}`)
+        .replace('value: "../build/pdf.sandbox.mjs"', `value: ${JSON.stringify(urls.sandbox)}`)
+        .replace('value: "../web/cmaps/"', `value: ${JSON.stringify(`${PDFJS_RESOURCE_ROOT}cmaps/`)}`)
+        .replace('value: "../web/iccs/"', `value: ${JSON.stringify(`${PDFJS_RESOURCE_ROOT}iccs/`)}`)
+        .replace('value: "../web/standard_fonts/"', `value: ${JSON.stringify(`${PDFJS_RESOURCE_ROOT}standard_fonts/`)}`)
+        .replace('value: "../web/wasm/"', `value: ${JSON.stringify(`${PDFJS_RESOURCE_ROOT}wasm/`)}`);
+
+    const viewerModuleUrl = createScriptUrl(module, { withPdfJsPolyfills: true });
+    const resourceScript = createPdfJsResourceScript();
+    const html = viewerHtml
+        .replace(/<meta[^>]+http-equiv=["']Content-Security-Policy["'][^>]*>\s*/i, '')
+        .replace(
+            /<link rel="resource" type="application\/l10n" href="locale\/locale\.json" \/>\s*/i,
+            `<link rel="resource" type="application/l10n" href="${PDFJS_RESOURCE_ROOT}locale/locale.json" />`
+        )
+        .replace('<script src="../build/pdf.mjs" type="module"></script>', '')
+        .replace('<link rel="stylesheet" href="viewer.css" />', `<style>${css}</style>`)
+        .replace(
+            '<script src="viewer.mjs" type="module"></script>',
+            `${resourceScript}<script type="module">import ${JSON.stringify(urls.pdf)}; await import(${JSON.stringify(viewerModuleUrl)});</script>`
+        );
+
+    return URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+}
+
+function inlineViewerCssImages(css) {
+    return css.replace(/url\((['"]?)(images\/[^)'"]+)\1\)/g, (match, _quote, imagePath) => {
+        const imageUrl = viewerImages[`./pdfjs-official/web/${imagePath}`];
+        return imageUrl ? `url("${imageUrl}")` : match;
+    });
+}
+
+function createPdfJsResourceScript() {
+    const resources = {};
+    for (const [path, url] of Object.entries(viewerResourceUrls)) {
+        resources[path.replace('./pdfjs-official/web/', '')] = url;
+    }
+
+    return `<script>
+(() => {
+  const resources = ${JSON.stringify(resources)};
+  const root = ${JSON.stringify(PDFJS_RESOURCE_ROOT)};
+  const nativeFetch = window.fetch.bind(window);
+  window.fetch = (input, init) => {
+    const url = typeof input === "string" ? input : input && input.url;
+    if (typeof url === "string" && url.startsWith(root)) {
+      const key = decodeURIComponent(url.slice(root.length));
+      const dataUrl = resources[key];
+      if (dataUrl) {
+        return nativeFetch(dataUrl, init);
+      }
+      console.warn("[PKU Art] Missing PDF.js resource", { url, key });
+      return Promise.resolve(new Response("", {
+        status: 404,
+        statusText: "PDF.js resource not found"
+      }));
+    }
+    return nativeFetch(input, init);
+  };
+})();
+</script>`;
+}
+
+function patchOfficialViewerModule(moduleSource) {
+    return moduleSource.replace(
+        `firstPagePromise.then(() => {
+        this.eventBus.dispatch("documentloaded", {
+          source: this
+        });
+      });`,
+        `Promise.resolve()
+        .then(() => this.pdfViewer.firstPagePromise)
+        .then(() => {
+          this.eventBus.dispatch("documentloaded", {
+            source: this
+          });
+        });`
+    );
+}
 
 function isPdfFileViewPage() {
     return FILE_VIEW_URL_PATTERN.test(window.location.href);
@@ -90,75 +283,84 @@ function createViewerShell(pdfUrl) {
     toolbar.appendChild(titleBlock);
     toolbar.appendChild(actions);
 
-    const pages = document.createElement('div');
-    pages.className = 'pku-art-pdf-pages';
+    const frame = document.createElement('iframe');
+    frame.className = 'pku-art-pdf-frame';
+    frame.title = 'PDF 预览';
+    frame.referrerPolicy = 'no-referrer';
 
-    root.appendChild(toolbar);
-    root.appendChild(pages);
+    root.appendChild(frame);
 
-    return { root, status, pages };
+    return { root, status, frame };
 }
 
-function createPageShell(pageNumber) {
-    const pageCard = document.createElement('div');
-    pageCard.className = 'pku-art-pdf-page-card';
-
-    const pageLabel = document.createElement('div');
-    pageLabel.className = 'pku-art-pdf-page-label';
-    pageLabel.textContent = `第 ${pageNumber} 页`;
-
-    const canvas = document.createElement('canvas');
-    canvas.className = 'pku-art-pdf-canvas';
-
-    pageCard.appendChild(pageLabel);
-    pageCard.appendChild(canvas);
-
-    return { pageCard, canvas };
+function bytesToHex(bytes) {
+    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join(' ');
 }
 
-async function renderPageToCanvas(page, canvas, containerWidth) {
-    const baseViewport = page.getViewport({ scale: 1 });
-    const safeWidth = Math.max(containerWidth - 32, 280);
-    const fitScale = safeWidth / baseViewport.width;
-    const outputScale = window.devicePixelRatio || 1;
-    const scale = Math.min(Math.max(fitScale, 0.6), 2.2);
-    const viewport = page.getViewport({ scale });
-    const context = canvas.getContext('2d', { alpha: false });
+function bytesToAscii(bytes) {
+    return Array.from(bytes, (byte) => {
+        if (byte >= 32 && byte <= 126) {
+            return String.fromCharCode(byte);
+        }
 
-    canvas.width = Math.floor(viewport.width * outputScale);
-    canvas.height = Math.floor(viewport.height * outputScale);
-    canvas.style.width = `${Math.floor(viewport.width)}px`;
-    canvas.style.height = `${Math.floor(viewport.height)}px`;
-
-    await page.render({
-        canvasContext: context,
-        viewport,
-        transform: outputScale === 1 ? null : [outputScale, 0, 0, outputScale, 0, 0],
-    }).promise;
+        return '.';
+    }).join('');
 }
 
-async function renderPdfPages(pdf, viewer) {
-    viewer.status.textContent = `共 ${pdf.numPages} 页`;
-    viewer.pages.replaceChildren();
+async function createPdfObjectUrl(pdfUrl) {
+    console.debug('[PKU Art] PDF viewer request', { pdfUrl });
 
-    const containerWidth = viewer.pages.clientWidth || viewer.root.clientWidth || window.innerWidth;
-
-    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-        const page = await pdf.getPage(pageNumber);
-        const { pageCard, canvas } = createPageShell(pageNumber);
-        viewer.pages.appendChild(pageCard);
-        await renderPageToCanvas(page, canvas, containerWidth);
-    }
-
-}
-
-async function loadPdfDocument(pdfUrl) {
-    const loadingTask = pdfjsLib.getDocument({
-        url: pdfUrl,
-        withCredentials: true,
+    const response = await fetch(pdfUrl, {
+        credentials: 'include',
     });
 
-    return loadingTask.promise;
+    const contentType = response.headers.get('content-type') || '';
+    const contentLength = response.headers.get('content-length') || '';
+
+    console.debug('[PKU Art] PDF viewer response', {
+        requestUrl: pdfUrl,
+        responseUrl: response.url,
+        redirected: response.redirected,
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        contentType,
+        contentLength,
+    });
+
+    if (!response.ok) {
+        throw new Error(`PDF request failed: ${response.status} ${response.statusText}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const headerBytes = new Uint8Array(arrayBuffer.slice(0, 16));
+    const headerAscii = bytesToAscii(headerBytes);
+
+    console.debug('[PKU Art] PDF viewer bytes', {
+        responseUrl: response.url,
+        size: arrayBuffer.byteLength,
+        contentType,
+        headerHex: bytesToHex(headerBytes),
+        headerAscii,
+        isPdfHeader: headerAscii.startsWith('%PDF'),
+    });
+
+    const blob = new Blob([arrayBuffer], { type: contentType || 'application/pdf' });
+    console.debug('[PKU Art] PDF viewer blob created', {
+        size: blob.size,
+        type: blob.type,
+    });
+
+    return URL.createObjectURL(blob);
+}
+
+function setOfficialViewerSource(frame, pdfObjectUrl) {
+    const viewerUrl = createOfficialViewerUrl(pdfObjectUrl);
+    frame.src = viewerUrl;
+    console.debug('[PKU Art] PDF viewer iframe source set', {
+        viewerUrl,
+        pdfObjectUrl,
+    });
 }
 
 function mountPdfViewer(targetElement) {
@@ -176,45 +378,16 @@ function mountPdfViewer(targetElement) {
     const viewer = createViewerShell(pdfUrl);
     targetElement.replaceWith(viewer.root);
 
-    let renderedPdf = null;
-    let rerenderTimer = null;
-    let rendering = false;
-
-    const render = async () => {
-        if (rendering) {
-            return;
-        }
-
-        rendering = true;
-        viewer.status.textContent = renderedPdf ? '正在调整预览尺寸...' : '正在加载文档...';
-
-        try {
-            if (!renderedPdf) {
-                renderedPdf = await loadPdfDocument(pdfUrl);
-            }
-            await renderPdfPages(renderedPdf, viewer);
-            viewer.status.textContent = `共 ${renderedPdf.numPages} 页`;
-        } catch (error) {
-            console.error('[PKU Art] PDF.js fallback render failed', error);
+    createPdfObjectUrl(pdfUrl)
+        .then((pdfObjectUrl) => {
+            viewer.root.dataset.pkuArtPdfObjectUrl = pdfObjectUrl;
+            setOfficialViewerSource(viewer.frame, pdfObjectUrl);
+            viewer.status.textContent = '已加载官方 PDF.js Viewer';
+        })
+        .catch((error) => {
+            console.error('[PKU Art] Official PDF.js viewer failed to load PDF', error);
             viewer.status.textContent = 'PDF 加载失败，请尝试直接打开或下载。';
-        } finally {
-            rendering = false;
-        }
-    };
-
-    const handleResize = () => {
-        if (!renderedPdf) {
-            return;
-        }
-
-        window.clearTimeout(rerenderTimer);
-        rerenderTimer = window.setTimeout(() => {
-            render();
-        }, 180);
-    };
-
-    window.addEventListener('resize', handleResize, { passive: true });
-    render();
+        });
 }
 
 function scanAndMountPdfViewer() {

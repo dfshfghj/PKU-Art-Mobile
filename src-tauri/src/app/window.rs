@@ -43,6 +43,17 @@ pub fn set_window(app: &mut App, config: &PakeConfig, tauri_config: &Config) -> 
         "window.pakeConfig = {}",
         serde_json::to_string(&window_config).unwrap()
     );
+    let pdf_viewer_loader_script = concat!(
+        "window.__PKU_ART_LOAD_PDF_VIEWER__ = function () {\n",
+        "  if (window.__PKU_ART_PDF_VIEWER_LOADED__) {\n",
+        "    window.PkuArtPdfViewer?.initializePdfViewerFallback?.();\n",
+        "    return;\n",
+        "  }\n",
+        "  window.__PKU_ART_PDF_VIEWER_LOADED__ = true;\n",
+        include_str!("../inject/pdf-viewer.js"),
+        "\n  window.PkuArtPdfViewer?.initializePdfViewerFallback?.();\n",
+        "};"
+    );
 
     #[cfg(desktop)]
     let effective_title = window_config.title.as_deref().unwrap_or_else(|| {
@@ -80,6 +91,7 @@ pub fn set_window(app: &mut App, config: &PakeConfig, tauri_config: &Config) -> 
         .initialization_script(include_str!("../inject/component.js"))
         .initialization_script(include_str!("../inject/event.js"))
         .initialization_script(include_str!("../inject/style.js"))
+        .initialization_script(pdf_viewer_loader_script)
         .initialization_script(include_str!("../inject/custom.js"));
 
     #[cfg(target_os = "windows")]

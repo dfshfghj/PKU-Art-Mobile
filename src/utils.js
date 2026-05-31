@@ -1558,13 +1558,21 @@ async function autoLogin() {
         return
     }
 
-    console.debug(window.location.href, document.cookie);
-
-    if (document.cookie.includes('course_login=true') && Date.now() - document.cookie.match(/course_last_login=([^;]*)/)[1] < 1000 * 60 * 60 * 3) {
+    if (!/^https:\/\/course\.pku\.edu\.cn\/\S*$/.test(window.location.href)) {
         return
     }
 
-    if (!/^https:\/\/course\.pku\.edu\.cn\/\S*$/.test(window.location.href)) {
+    let cookie = '';
+    try {
+        cookie = document.cookie;
+    } catch (error) {
+        console.debug('[PKU Art] Skip autoLogin because cookies are unavailable in this document', error);
+        return
+    }
+
+    console.debug(window.location.href, cookie);
+
+    if (cookie.includes('course_login=true') && Date.now() - cookie.match(/course_last_login=([^;]*)/)?.[1] < 1000 * 60 * 60 * 3) {
         return
     }
 
@@ -1603,11 +1611,19 @@ async function portalLogin() {
         return
     }
 
-    if (document.cookie.includes('portal_login=true') && Date.now() - document.cookie.match(/portal_last_login=([^;]*)/)[1] < 1000 * 60 * 60 * 3) {
+    if (!/^https:\/\/course\.pku\.edu\.cn\/webapps\/streamViewer\/streamViewer\S*streamName=mygrades\S*$/.test(window.location.href)) {
         return
     }
 
-    if (!/^https:\/\/course\.pku\.edu\.cn\/webapps\/streamViewer\/streamViewer\S*streamName=mygrades\S*$/.test(window.location.href)) {
+    let cookie = '';
+    try {
+        cookie = document.cookie;
+    } catch (error) {
+        console.debug('[PKU Art] Skip portalLogin because cookies are unavailable in this document', error);
+        return
+    }
+
+    if (cookie.includes('portal_login=true') && Date.now() - cookie.match(/portal_last_login=([^;]*)/)?.[1] < 1000 * 60 * 60 * 3) {
         return
     }
 
