@@ -1,5 +1,6 @@
 import './logger.js';
 import applyStylesForCurrentPage from './style.js';
+import { initializePdfViewerFallback } from './pdfViewer.js';
 import { initializeThemeManager, initializeThemeToggleButton } from './theme.js';
 import {
     insertNav,
@@ -34,6 +35,7 @@ import {
 
 insertNav();
 applyStylesForCurrentPage();
+initializePdfViewerFallback();
 initializeThemeManager();
 initializeThemeToggleButton();
 initializeLogoNavigation();

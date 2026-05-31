@@ -44,13 +44,125 @@ ul#content_listContainer > li a {
 }
 
 /* 插入embed Tag的卡片样式 */
-embed {
+.pku-art-pdf-viewer,
+embed,
+iframe[type='application/pdf'],
+object[type='application/pdf'] {
     margin-top: 50px;
     position: relative;
-    height: min(1000px, 80vh) !important;
     background: var(--c-card);
     border-radius: 10px;
     border: 1px solid var(--c-border);
     padding: 10px;
     box-sizing: border-box;
+}
+
+embed {
+    height: min(1000px, 80vh) !important;
+}
+
+.pku-art-pdf-viewer {
+    width: min(100%, 1100px);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.pku-art-pdf-toolbar {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 4px 4px 14px;
+    border-bottom: 1px solid var(--c-border);
+}
+
+.pku-art-pdf-title-block {
+    min-width: 0;
+}
+
+.pku-art-pdf-title {
+    color: var(--c-title);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.pku-art-pdf-status {
+    color: var(--c-text);
+    opacity: 0.75;
+    margin-top: 4px;
+    word-break: break-word;
+}
+
+.pku-art-pdf-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.pku-art-pdf-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: var(--cyan-6);
+    color: #fff !important;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.pku-art-pdf-pages {
+    display: grid;
+    gap: 18px;
+    padding-top: 18px;
+}
+
+.pku-art-pdf-page-card {
+    background: color-mix(in srgb, var(--c-background) 75%, transparent);
+    border: 1px solid var(--c-border);
+    border-radius: 12px;
+    padding: 14px;
+    overflow: auto;
+}
+
+.pku-art-pdf-page-label {
+    color: var(--c-text);
+    opacity: 0.75;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.pku-art-pdf-canvas {
+    display: block;
+    max-width: 100%;
+    margin: 0 auto;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 10px 30px rgb(0 0 0 / 8%);
+}
+
+@media (max-width: 720px) {
+    .pku-art-pdf-viewer {
+        margin-top: 16px;
+        padding: 12px;
+    }
+
+    .pku-art-pdf-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pku-art-pdf-actions {
+        justify-content: flex-start;
+    }
+
+    .pku-art-pdf-action {
+        flex: 1 1 140px;
+    }
+
+    .pku-art-pdf-page-card {
+        padding: 10px;
+    }
 }
