@@ -27,6 +27,23 @@ pub struct NotificationParams {
     icon: String,
 }
 
+fn should_skip_tls_verification(url: &Url) -> bool {
+    matches!(url.host_str(), Some("course.pku.edu.cn"))
+}
+
+fn build_download_client(url: &Url) -> Result<tauri_plugin_http::reqwest::Client, String> {
+    let mut builder = ClientBuilder::new();
+
+    if should_skip_tls_verification(url) {
+        // The campus site currently serves an incomplete certificate chain on
+        // some clients. Limit the bypass to this known host instead of
+        // disabling certificate validation for every download target.
+        builder = builder.danger_accept_invalid_certs(true);
+    }
+
+    builder.build().map_err(|error| error.to_string())
+}
+
 #[command]
 pub async fn download_file(app: AppHandle, params: DownloadFileParams) -> Result<(), String> {
     let window: WebviewWindow = app.get_webview_window("pake").unwrap();
@@ -37,13 +54,11 @@ pub async fn download_file(app: AppHandle, params: DownloadFileParams) -> Result
 
     let output_path = app.path().download_dir().unwrap().join(params.filename);
     let file_path = check_file_or_append(output_path.to_str().unwrap());
-    let client = ClientBuilder::new().build().unwrap();
+    let request_url = Url::from_str(&params.url).map_err(|error| error.to_string())?;
+    let client = build_download_client(&request_url)?;
 
     let response = client
-        .execute(Request::new(
-            Method::GET,
-            Url::from_str(&params.url).unwrap(),
-        ))
+        .execute(Request::new(Method::GET, request_url))
         .await;
 
     match response {
