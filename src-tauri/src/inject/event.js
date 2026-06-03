@@ -125,6 +125,8 @@ const ALL_DOWNLOADABLE_EXTENSIONS = Object.values(
 ).flat();
 
 const DOWNLOAD_PATH_PATTERNS = [
+  "/bbcswebdav/",
+  "/content/file",
   "/download/",
   "/files/",
   "/attachments/",
@@ -392,7 +394,28 @@ document.addEventListener("DOMContentLoaded", () => {
       const target = anchorElement.target;
       const hrefUrl = new URL(anchorElement.href);
       const absoluteUrl = hrefUrl.href;
-      let filename = anchorElement.download || getFilenameFromUrl(absoluteUrl);
+      const userLanguage = getUserLanguage();
+      const filename = getSuggestedDownloadFilename(anchorElement, absoluteUrl);
+
+      // Process download links for Rust to handle before target-based navigation
+      // logic, since Blackboard file links often use target="_blank".
+      if (
+        isDownloadRequired(absoluteUrl, anchorElement, e) &&
+        !isSpecialDownload(absoluteUrl)
+      ) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        invoke("download_file", {
+          params: {
+            url: absoluteUrl,
+            filename,
+            language: userLanguage,
+            cookie: document.cookie || null,
+            referer: window.location.href,
+          },
+        });
+        return;
+      }
 
       // Handle _blank links: same domain navigates in-app, cross-domain opens new window
       if (target === "_blank") {
@@ -430,20 +453,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         e.preventDefault();
         handleExternalLink(absoluteUrl);
-        return;
-      }
-
-      // Process download links for Rust to handle.
-      if (
-        isDownloadRequired(absoluteUrl, anchorElement, e) &&
-        !isSpecialDownload(absoluteUrl)
-      ) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        const userLanguage = getUserLanguage();
-        invoke("download_file", {
-          params: { url: absoluteUrl, filename, language: userLanguage },
-        });
         return;
       }
 
@@ -936,4 +945,33 @@ function getFilenameFromUrl(url) {
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     return `image-${timestamp}.png`;
   }
+}
+
+function sanitizeFilename(filename) {
+  return filename.replace(/[<>:"/\\|?*\u0000-\u001f]/g, "_").trim();
+}
+
+function getSuggestedDownloadFilename(anchorElement, url) {
+  if (anchorElement?.download) {
+    return sanitizeFilename(anchorElement.download);
+  }
+
+  const anchorText = sanitizeFilename(anchorElement?.textContent || "");
+  const urlFilename = getFilenameFromUrl(url);
+  const hasExtension = urlFilename && /\.[A-Za-z0-9]{1,10}$/.test(urlFilename);
+
+  if (anchorText) {
+    if (hasExtension) {
+      return urlFilename;
+    }
+
+    return anchorText;
+  }
+
+  if (hasExtension) {
+    return urlFilename;
+  }
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  return `download-${timestamp}`;
 }

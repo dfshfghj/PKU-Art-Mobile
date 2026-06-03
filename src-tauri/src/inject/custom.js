@@ -3078,5 +3078,5 @@ ${downloadUrl}`);
     }
   });
 
-  observer.observe(document.documentElement, { childList: true });
+  observer.observe(document, { childList: true });
 })();

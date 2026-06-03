@@ -1,16 +1,24 @@
-use crate::util::{check_file_or_append, get_download_message_with_lang, show_toast, MessageType};
+use crate::util::{
+    check_file_or_append, get_download_message_with_lang, show_toast, MessageType,
+};
 use std::fs::{self, File};
 use std::io::Write;
+use std::path::Path;
 use std::str::FromStr;
 use tauri::http::Method;
 use tauri::{command, AppHandle, Manager, Url, WebviewWindow};
-use tauri_plugin_http::reqwest::{ClientBuilder, Request};
+use tauri_plugin_http::reqwest::{
+    header::{CONTENT_DISPOSITION, CONTENT_TYPE, COOKIE, REFERER},
+    ClientBuilder,
+};
 
 #[derive(serde::Deserialize)]
 pub struct DownloadFileParams {
     url: String,
     filename: String,
     language: Option<String>,
+    cookie: Option<String>,
+    referer: Option<String>,
 }
 
 #[derive(serde::Deserialize)]
@@ -28,7 +36,9 @@ pub struct NotificationParams {
 }
 
 fn should_skip_tls_verification(url: &Url) -> bool {
-    matches!(url.host_str(), Some("course.pku.edu.cn"))
+    url.host_str()
+        .map(|host| host == "pku.edu.cn" || host.ends_with(".pku.edu.cn"))
+        .unwrap_or(false)
 }
 
 fn build_download_client(url: &Url) -> Result<tauri_plugin_http::reqwest::Client, String> {
@@ -44,6 +54,92 @@ fn build_download_client(url: &Url) -> Result<tauri_plugin_http::reqwest::Client
     builder.build().map_err(|error| error.to_string())
 }
 
+fn extract_filename_from_content_disposition(header_value: &str) -> Option<String> {
+    for part in header_value.split(';').map(str::trim) {
+        if let Some(value) = part.strip_prefix("filename*=") {
+            let value = value.trim_matches('"');
+            let encoded = value.split("''").nth(1).unwrap_or(value);
+            let decoded = percent_encoding::percent_decode_str(encoded)
+                .decode_utf8()
+                .ok()?;
+            let filename = decoded.trim();
+            if !filename.is_empty() {
+                return Some(filename.to_string());
+            }
+        }
+
+        if let Some(value) = part.strip_prefix("filename=") {
+            let filename = value.trim_matches('"').trim();
+            if !filename.is_empty() {
+                return Some(filename.to_string());
+            }
+        }
+    }
+
+    None
+}
+
+fn filename_from_url(url: &Url) -> Option<String> {
+    Path::new(url.path())
+        .file_name()
+        .and_then(|name| name.to_str())
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .map(ToOwned::to_owned)
+}
+
+fn extension_from_content_type(content_type: &str) -> Option<&'static str> {
+    let mime = content_type
+        .split(';')
+        .next()
+        .unwrap_or_default()
+        .trim()
+        .to_ascii_lowercase();
+
+    match mime.as_str() {
+        "application/pdf" => Some("pdf"),
+        "text/html" => Some("html"),
+        "text/plain" => Some("txt"),
+        "application/msword" => Some("doc"),
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" => Some("docx"),
+        "application/vnd.ms-powerpoint" => Some("ppt"),
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation" => Some("pptx"),
+        "application/vnd.ms-excel" => Some("xls"),
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" => Some("xlsx"),
+        "application/zip" => Some("zip"),
+        _ => None,
+    }
+}
+
+fn has_extension(filename: &str) -> bool {
+    Path::new(filename)
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| !ext.trim().is_empty())
+        .unwrap_or(false)
+}
+
+fn resolve_download_filename(
+    suggested_filename: &str,
+    final_url: &Url,
+    content_disposition: Option<&str>,
+    content_type: Option<&str>,
+) -> String {
+    let mut filename = content_disposition
+        .and_then(extract_filename_from_content_disposition)
+        .or_else(|| filename_from_url(final_url).filter(|name| has_extension(name)))
+        .unwrap_or_else(|| suggested_filename.to_string());
+
+    if !has_extension(&filename) {
+        if let Some(extension) = content_type.and_then(extension_from_content_type) {
+            filename.push('.');
+            filename.push_str(extension);
+        }
+    }
+
+    filename
+}
+
 #[command]
 pub async fn download_file(app: AppHandle, params: DownloadFileParams) -> Result<(), String> {
     let window: WebviewWindow = app.get_webview_window("pake").unwrap();
@@ -52,17 +148,43 @@ pub async fn download_file(app: AppHandle, params: DownloadFileParams) -> Result
         &get_download_message_with_lang(MessageType::Start, params.language.clone()),
     );
 
-    let output_path = app.path().download_dir().unwrap().join(params.filename);
-    let file_path = check_file_or_append(output_path.to_str().unwrap());
     let request_url = Url::from_str(&params.url).map_err(|error| error.to_string())?;
     let client = build_download_client(&request_url)?;
+    let mut request = client.request(Method::GET, request_url.clone());
 
-    let response = client
-        .execute(Request::new(Method::GET, request_url))
-        .await;
+    if let Some(cookie) = params.cookie.as_ref().filter(|value| !value.trim().is_empty()) {
+        request = request.header(COOKIE, cookie);
+    }
+
+    if let Some(referer) = params
+        .referer
+        .as_ref()
+        .filter(|value| !value.trim().is_empty())
+    {
+        request = request.header(REFERER, referer);
+    }
+
+    let response = request.send().await;
 
     match response {
         Ok(res) => {
+            let final_url = res.url().clone();
+            let content_disposition = res
+                .headers()
+                .get(CONTENT_DISPOSITION)
+                .and_then(|value| value.to_str().ok());
+            let content_type = res
+                .headers()
+                .get(CONTENT_TYPE)
+                .and_then(|value| value.to_str().ok());
+            let resolved_filename = resolve_download_filename(
+                &params.filename,
+                &final_url,
+                content_disposition,
+                content_type,
+            );
+            let output_path = app.path().download_dir().unwrap().join(resolved_filename);
+            let file_path = check_file_or_append(output_path.to_str().unwrap());
             let bytes = res.bytes().await.unwrap();
 
             let mut file = File::create(file_path).unwrap();

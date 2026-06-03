@@ -108,7 +108,6 @@ pub fn check_file_or_append(file_path: &str) -> String {
 
     while new_path.exists() {
         let file_stem = new_path.file_stem().unwrap().to_string_lossy().to_string();
-        let extension = new_path.extension().unwrap().to_string_lossy().to_string();
         let parent_dir = new_path.parent().unwrap();
 
         let new_file_stem = match file_stem.rfind('-') {
@@ -123,7 +122,12 @@ pub fn check_file_or_append(file_path: &str) -> String {
             }
         };
 
-        new_path = parent_dir.join(format!("{new_file_stem}.{extension}"));
+        new_path = match new_path.extension().and_then(|ext| ext.to_str()) {
+            Some(extension) if !extension.is_empty() => {
+                parent_dir.join(format!("{new_file_stem}.{extension}"))
+            }
+            _ => parent_dir.join(new_file_stem),
+        };
     }
 
     new_path.to_string_lossy().into_owned()

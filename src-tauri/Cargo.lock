@@ -2733,6 +2733,7 @@ dependencies = [
 name = "pake"
 version = "3.1.2"
 dependencies = [
+ "percent-encoding",
  "serde",
  "serde_json",
  "tauri",

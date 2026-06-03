@@ -33,6 +33,7 @@ tauri-plugin-safe-area-insets-css = "0.1"
 tauri-plugin-store = "2"
 tauri-plugin-log = "2"
 tauri-plugin-fs = "2"
+percent-encoding = "2.3.2"
 
 [features]
 # this feature is used for development builds from development cli
