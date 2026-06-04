@@ -344,6 +344,141 @@ document.addEventListener("DOMContentLoaded", () => {
   const isSpecialDownload = (url) =>
     ["blob", "data"].some((protocol) => url.startsWith(protocol));
 
+  async function saveBinaryDownload(filename, buffer, language) {
+    await invoke("download_file_by_binary", {
+      params: {
+        filename,
+        binary: Array.from(new Uint8Array(buffer)),
+        language,
+      },
+    });
+  }
+
+  async function downloadViaFetch(url, filename, language) {
+    const response = await fetch(url, {
+      credentials: "include",
+    });
+
+    const contentType = response.headers.get("content-type") || "";
+    const contentDisposition =
+      response.headers.get("content-disposition") || "";
+    const resolvedFilename = resolveDownloadFilenameFromResponse(
+      filename,
+      response.url,
+      contentType,
+      contentDisposition,
+    );
+
+    console.debug("[PKU Art] Download via fetch", {
+      requestUrl: url,
+      responseUrl: response.url,
+      redirected: response.redirected,
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      contentType,
+      resolvedFilename,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Fetch download failed: ${response.status} ${response.statusText}`);
+    }
+
+    const buffer = await response.arrayBuffer();
+    await saveBinaryDownload(resolvedFilename, buffer, language);
+  }
+
+  function downloadViaXhr(url, filename, language) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", url, true);
+      xhr.responseType = "arraybuffer";
+      xhr.withCredentials = true;
+
+      xhr.onload = async () => {
+        try {
+          const contentType = xhr.getResponseHeader("content-type") || "";
+          const contentDisposition =
+            xhr.getResponseHeader("content-disposition") || "";
+          const resolvedFilename = resolveDownloadFilenameFromResponse(
+            filename,
+            xhr.responseURL,
+            contentType,
+            contentDisposition,
+          );
+
+          console.debug("[PKU Art] Download via XHR", {
+            requestUrl: url,
+            responseUrl: xhr.responseURL,
+            status: xhr.status,
+            statusText: xhr.statusText,
+            contentType,
+            resolvedFilename,
+          });
+
+          if (xhr.status < 200 || xhr.status >= 300) {
+            reject(new Error(`XHR download failed: ${xhr.status} ${xhr.statusText}`));
+            return;
+          }
+
+          await saveBinaryDownload(resolvedFilename, xhr.response, language);
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      xhr.onerror = () => {
+        reject(new Error("XHR network error"));
+      };
+
+      xhr.onabort = () => {
+        reject(new Error("XHR aborted"));
+      };
+
+      xhr.send();
+    });
+  }
+
+  async function downloadHttpResource(url, filename, language) {
+    try {
+      await downloadViaFetch(url, filename, language);
+      return;
+    } catch (fetchError) {
+      console.warn("[PKU Art] Fetch download failed, falling back to XHR", {
+        url,
+        error: String(fetchError),
+      });
+    }
+
+    try {
+      await downloadViaXhr(url, filename, language);
+      return;
+    } catch (xhrError) {
+      console.warn("[PKU Art] XHR download failed, falling back to native HTTP", {
+        url,
+        error: String(xhrError),
+      });
+    }
+
+    invoke("download_file", {
+      params: {
+        url,
+        filename,
+        language,
+        cookie: document.cookie || null,
+        referer: window.location.href,
+      },
+    }).catch((error) => {
+      console.error("[PKU Art] Native download failed", {
+        url,
+        filename,
+        error: String(error),
+      });
+      showDownloadError(filename);
+    });
+  }
+
   const isDownloadRequired = (url, anchorElement, e) =>
     anchorElement.download || e.metaKey || e.ctrlKey || isDownloadableFile(url);
 
@@ -405,14 +540,9 @@ document.addEventListener("DOMContentLoaded", () => {
       ) {
         e.preventDefault();
         e.stopImmediatePropagation();
-        invoke("download_file", {
-          params: {
-            url: absoluteUrl,
-            filename,
-            language: userLanguage,
-            cookie: document.cookie || null,
-            referer: window.location.href,
-          },
+        downloadHttpResource(absoluteUrl, filename, userLanguage).catch((error) => {
+          console.error("Failed to download file:", filename, error);
+          showDownloadError(filename);
         });
         return;
       }
@@ -716,13 +846,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       // Regular HTTP(S) image
       const userLanguage = getUserLanguage();
-      invoke("download_file", {
-        params: {
-          url: imageUrl,
-          filename: filename,
-          language: userLanguage,
-        },
-      }).catch((error) => {
+      downloadHttpResource(imageUrl, filename, userLanguage).catch((error) => {
         console.error("Failed to download image:", filename, error);
         showDownloadError(filename);
       });
@@ -797,9 +921,7 @@ document.addEventListener("DOMContentLoaded", () => {
           items.push(
             createMenuItem(menuTexts.downloadFile, () => {
               const filename = getFilenameFromUrl(data.url);
-              invoke("download_file", {
-                params: { url: data.url, filename, language: userLanguage },
-              }).catch((error) => {
+              downloadHttpResource(data.url, filename, userLanguage).catch((error) => {
                 console.error("Failed to download file:", filename, error);
                 showDownloadError(filename);
               });
@@ -951,6 +1073,75 @@ function sanitizeFilename(filename) {
   return filename.replace(/[<>:"/\\|?*\u0000-\u001f]/g, "_").trim();
 }
 
+function extractFilenameFromContentDisposition(headerValue) {
+  if (!headerValue) {
+    return "";
+  }
+
+  const parts = headerValue.split(";").map((part) => part.trim());
+  for (const part of parts) {
+    if (part.startsWith("filename*=")) {
+      const value = part.slice("filename*=".length).replace(/^"|"$/g, "");
+      const encoded = value.includes("''") ? value.split("''").slice(1).join("''") : value;
+      try {
+        const decoded = decodeURIComponent(encoded);
+        if (decoded) {
+          return sanitizeFilename(decoded);
+        }
+      } catch (_error) {
+        if (encoded) {
+          return sanitizeFilename(encoded);
+        }
+      }
+    }
+
+    if (part.startsWith("filename=")) {
+      const value = part.slice("filename=".length).replace(/^"|"$/g, "").trim();
+      if (value) {
+        return sanitizeFilename(value);
+      }
+    }
+  }
+
+  return "";
+}
+
+function getExtensionFromContentType(contentType) {
+  const normalized = (contentType || "")
+    .split(";")[0]
+    .trim()
+    .toLowerCase();
+
+  switch (normalized) {
+    case "application/pdf":
+      return "pdf";
+    case "text/html":
+      return "html";
+    case "text/plain":
+      return "txt";
+    case "application/msword":
+      return "doc";
+    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+      return "docx";
+    case "application/vnd.ms-powerpoint":
+      return "ppt";
+    case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+      return "pptx";
+    case "application/vnd.ms-excel":
+      return "xls";
+    case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+      return "xlsx";
+    case "application/zip":
+      return "zip";
+    default:
+      return "";
+  }
+}
+
+function hasFilenameExtension(filename) {
+  return /\.[A-Za-z0-9]{1,10}$/.test(filename || "");
+}
+
 function getSuggestedDownloadFilename(anchorElement, url) {
   if (anchorElement?.download) {
     return sanitizeFilename(anchorElement.download);
@@ -974,4 +1165,40 @@ function getSuggestedDownloadFilename(anchorElement, url) {
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   return `download-${timestamp}`;
+}
+
+function resolveDownloadFilenameFromResponse(
+  suggestedFilename,
+  finalUrl,
+  contentType,
+  contentDisposition,
+) {
+  const headerFilename = extractFilenameFromContentDisposition(contentDisposition);
+  if (headerFilename) {
+    return headerFilename;
+  }
+
+  let resolved = suggestedFilename;
+
+  if (finalUrl) {
+    try {
+      const urlFilename = sanitizeFilename(
+        new URL(finalUrl).pathname.split("/").pop() || "",
+      );
+      if (urlFilename && hasFilenameExtension(urlFilename)) {
+        resolved = urlFilename;
+      }
+    } catch (_error) {
+      // Ignore final URL parsing failures and keep the suggested filename.
+    }
+  }
+
+  if (!hasFilenameExtension(resolved)) {
+    const extension = getExtensionFromContentType(contentType);
+    if (extension) {
+      resolved = `${resolved}.${extension}`;
+    }
+  }
+
+  return sanitizeFilename(resolved);
 }

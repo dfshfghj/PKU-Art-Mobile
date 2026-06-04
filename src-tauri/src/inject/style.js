@@ -387,7 +387,7 @@ window.addEventListener("DOMContentLoaded", (_event) => {
     }
 
     #__next > div.AnnouncementWrapper_container__Z51yh > div > aside.SidebarLayout_sidebar__SXeDJ.SidebarLayout_left__k163a > div > div > header{
-      padding-left: 84px;
+      padding-left: 60px;
       padding-top: 10px;
     }
 

@@ -87,6 +87,7 @@ table.bouncer,
     }
 
     .coursePath * {
+        display: flex;
         padding: 0 !important;
         margin: 0 !important;
         white-space: nowrap;
@@ -124,6 +125,12 @@ body > div.cmdiv {
     padding: 0.5em;
     box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 
                 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+@media (max-width: 768px) {
+    body > div.cmdiv {
+        position: fixed;
+    }
 }
 
 /* 每个小的 section（最近访问...） */
@@ -548,4 +555,29 @@ li.divider,
 #pageList {
     color: var(--c-text);
     line-height: 1.6rem;
+}
+
+@media (max-width: 768px) {
+    .locationPane {
+        margin: 0;
+    }
+    
+    ul > li {
+        margin: 0 !important;
+        padding: 0 6px !important;
+    }
+
+    .details h3 {
+        padding-top: 16px;
+        padding-bottom: 0;
+    }
+
+    .details li {
+        padding-top: 0 !important;
+    }
+    
+    .details ol,
+    .details ul {
+        padding-left: 16px;
+    }
 }

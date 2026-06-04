@@ -138,6 +138,10 @@ body .global-nav-bar-wrap {
     min-width: 20px;
 }
 
+.pku-art-mobile-course-header {
+    display: none;
+}
+
 @media (min-width: 1037px) {
     .pku-art-menu-toggle-bar,
     .pku-art-menu-spacer {
@@ -314,5 +318,81 @@ body .global-nav-bar-wrap {
 @media (max-width: 668px) { 
     .global-nav-bar:not(.mobile-only) {
         display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    h1#pageTitleHeader {
+        margin: 0;
+    }
+
+    .breadcrumbs ol {
+        width: min-content;
+    }
+
+
+
+    body.pku-art-mobile-course-header-active .pku-art-menu-toggle-bar {
+        flex: 0 0 auto;
+        height: 32px;
+    }
+
+    body.pku-art-mobile-course-header-active .pku-art-mobile-course-header {
+        line-height: normal;
+        padding: 0 10px;
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        justify-content: center;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    body.pku-art-mobile-course-header-active #breadcrumbs {
+        float: none;
+        width: auto;
+        min-width: 0;
+        padding: 0;
+        background: transparent;
+        justify-content: flex-start;
+        text-align: left;
+    }
+
+    body.pku-art-mobile-course-header-active #breadcrumbs .coursePath {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    body.pku-art-mobile-course-header-active #breadcrumbs span {
+        color: var(--c-text);
+        font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        animation: none;
+        -webkit-animation: none;
+    }
+
+    body.pku-art-mobile-course-header-active #pageTitleDiv.pku-art-page-title-detached {
+        display: none;
+    }
+
+    body.pku-art-mobile-course-header-active #pageTitleHeader {
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+        color: var(--c-title) !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    body.pku-art-mobile-course-header-active #pageTitleHeader * {
+        color: var(--c-title) !important;
+        font-size: 18px;
     }
 }

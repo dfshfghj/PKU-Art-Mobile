@@ -29,6 +29,7 @@ dist-ssr
 
 update-cdn.py
 test
+example
 
 .env
 README copy.md

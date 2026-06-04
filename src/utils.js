@@ -1231,8 +1231,8 @@ function initializeMenuToggleButton() {
         });
 
         menuToggleBar.appendChild(menuToggleButton);
-        navWrap.appendChild(spacer);
         navWrap.appendChild(menuToggleBar);
+        navWrap.appendChild(spacer);
     }
     addMenuToggleButton();
 }
@@ -1303,6 +1303,207 @@ function initializePageTitleText() {
     });
 
     observer.observe(document, { childList: true, subtree: true });
+}
+
+function initializeMobileCourseHeaderLayout() {
+    const coursePagePattern = /^https:\/\/course\.pku\.edu\.cn\/webapps\/\S*course_id\S*$/;
+    if (!coursePagePattern.test(window.location.href)) {
+        return;
+    }
+
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    const bodyClassName = 'pku-art-mobile-course-header-active';
+    const hiddenClassName = 'pku-art-page-title-detached';
+    const state = {
+        records: null,
+        mediaListenerBound: false,
+        initStarted: false,
+    };
+
+    const restoreNode = (record) => {
+        if (!record?.node || !record.parent) {
+            return;
+        }
+
+        const referenceNode =
+            record.nextSibling && record.nextSibling.parentNode === record.parent ? record.nextSibling : null;
+        record.parent.insertBefore(record.node, referenceNode);
+    };
+
+    const ensureHeaderRecords = () => {
+        if (state.records) {
+            return state.records;
+        }
+
+        const breadcrumbs = document.querySelector('#breadcrumbs');
+        const pageTitleHeader = document.querySelector('#pageTitleHeader');
+        if (!breadcrumbs || !pageTitleHeader) {
+            return null;
+        }
+
+        state.records = {
+            breadcrumbs: {
+                node: breadcrumbs,
+                parent: breadcrumbs.parentNode,
+                nextSibling: breadcrumbs.nextSibling,
+            },
+            pageTitleHeader: {
+                node: pageTitleHeader,
+                parent: pageTitleHeader.parentNode,
+                nextSibling: pageTitleHeader.nextSibling,
+            },
+        };
+
+        return state.records;
+    };
+
+    const ensureHeaderHost = () => {
+        const navWrap = document.querySelector('.global-nav-bar-wrap');
+        if (!navWrap) {
+            return null;
+        }
+
+        let headerHost = navWrap.querySelector('.pku-art-mobile-course-header');
+        if (headerHost) {
+            return headerHost;
+        }
+
+        headerHost = document.createElement('div');
+        headerHost.className = 'pku-art-mobile-course-header';
+
+        const spacer = navWrap.querySelector('.pku-art-menu-spacer');
+        const menuToggleBar = navWrap.querySelector('.pku-art-menu-toggle-bar');
+        if (spacer) {
+            navWrap.insertBefore(headerHost, spacer);
+        } else if (menuToggleBar) {
+            menuToggleBar.insertAdjacentElement('afterend', headerHost);
+        } else {
+            navWrap.insertAdjacentElement('afterbegin', headerHost);
+        }
+
+        return headerHost;
+    };
+
+    const moveNodesIntoHeader = () => {
+        const records = ensureHeaderRecords();
+        const headerHost = ensureHeaderHost();
+        if (!records || !headerHost) {
+            return false;
+        }
+
+        if (
+            records.breadcrumbs.node.parentNode === headerHost &&
+            records.pageTitleHeader.node.parentNode === headerHost
+        ) {
+            document.body.classList.add(bodyClassName);
+            const pageTitleDiv = document.querySelector('#pageTitleDiv');
+            if (pageTitleDiv) {
+                pageTitleDiv.classList.add(hiddenClassName);
+            }
+            return true;
+        }
+
+        headerHost.append(records.breadcrumbs.node, records.pageTitleHeader.node);
+        document.body.classList.add(bodyClassName);
+
+        const pageTitleDiv = document.querySelector('#pageTitleDiv');
+        if (pageTitleDiv) {
+            pageTitleDiv.classList.add(hiddenClassName);
+        }
+
+        return true;
+    };
+
+    const restoreOriginalLayout = () => {
+        if (!state.records) {
+            return;
+        }
+
+        if (
+            state.records.breadcrumbs.node.parentNode === state.records.breadcrumbs.parent &&
+            state.records.pageTitleHeader.node.parentNode === state.records.pageTitleHeader.parent
+        ) {
+            document.body.classList.remove(bodyClassName);
+            const pageTitleDiv = document.querySelector('#pageTitleDiv');
+            if (pageTitleDiv) {
+                pageTitleDiv.classList.remove(hiddenClassName);
+            }
+            return;
+        }
+
+        restoreNode(state.records.breadcrumbs);
+        restoreNode(state.records.pageTitleHeader);
+        document.body.classList.remove(bodyClassName);
+
+        const pageTitleDiv = document.querySelector('#pageTitleDiv');
+        if (pageTitleDiv) {
+            pageTitleDiv.classList.remove(hiddenClassName);
+        }
+
+        const headerHost = document.querySelector('.pku-art-mobile-course-header');
+        if (headerHost && headerHost.childElementCount === 0) {
+            headerHost.remove();
+        }
+    };
+
+    const syncLayout = () => {
+        if (mediaQuery.matches) {
+            moveNodesIntoHeader();
+            return;
+        }
+
+        restoreOriginalLayout();
+    };
+
+    const startLayoutSync = () => {
+        if (state.initStarted) {
+            syncLayout();
+            return;
+        }
+
+        state.initStarted = true;
+
+        const tryInitialize = () => {
+            const records = ensureHeaderRecords();
+            const navWrap = document.querySelector('.global-nav-bar-wrap');
+            if (!records || !navWrap) {
+                return false;
+            }
+
+            syncLayout();
+
+            if (!state.mediaListenerBound) {
+                mediaQuery.addEventListener('change', syncLayout);
+                state.mediaListenerBound = true;
+            }
+
+            return true;
+        };
+
+        if (tryInitialize()) {
+            return;
+        }
+
+        const observer = new MutationObserver(() => {
+            if (tryInitialize()) {
+                observer.disconnect();
+            }
+        });
+
+        if (document.body) {
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true,
+            });
+        }
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startLayoutSync, { once: true });
+        return;
+    }
+
+    startLayoutSync();
 }
 
 function removeConflictJQuery() {
@@ -1953,6 +2154,7 @@ export {
     formatAnnouncementTime,
     initializeSettingButton,
     initializeMenuToggleButton,
+    initializeMobileCourseHeaderLayout,
     convertBlankLinksToTop,
     initializePageTitleText,
     setViewportMeta,

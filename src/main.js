@@ -6,6 +6,7 @@ import {
     initializeLogoNavigation,
     ensureSidebarVisible,
     overrideSiteIcons,
+    initializeCustomSelects,
     removeCourseSerialNumbers,
     initializeDirectDownload,
     initializeSparkDownloadRename,
@@ -20,7 +21,7 @@ import {
     removeConflictJQuery,
     initializeBottomNavigationBar,
     formatAnnouncementTime,
-    initializeSettingButton,
+    initializeMobileCourseHeaderLayout,
     initializeMenuToggleButton,
     initializePageTitleText,
     convertBlankLinksToTop,
@@ -29,6 +30,7 @@ import {
     persistUserInfo,
     autoLogin,
     insertGradesHeader,
+    initializeSettingButton,
     initializeSettingPage,
 } from './utils.js';
 
@@ -72,6 +74,7 @@ initializeThemeToggleButton();
 initializeLogoNavigation();
 ensureSidebarVisible();
 overrideSiteIcons();
+initializeCustomSelects();
 removeCourseSerialNumbers();
 initializeDirectDownload();
 initializeSparkDownloadRename();
@@ -86,14 +89,15 @@ removeConflictJQuery();
 removeBootstrap();
 initializeBottomNavigationBar();
 formatAnnouncementTime();
-initializeSettingButton();
 initializeMenuToggleButton();
+initializeMobileCourseHeaderLayout();
 initializePageTitleText();
 convertBlankLinksToTop();
 setViewportMeta();
 persistUserInfo();
 autoLogin();
 insertGradesHeader();
+initializeSettingButton();
 initializeSettingPage();
 }
 // insertHTMLForDebug();
