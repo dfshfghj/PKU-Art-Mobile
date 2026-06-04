@@ -157,7 +157,7 @@ function initializeCustomSelects() {
 
     const updateSelectButtonLabel = (select, buttonLabel) => {
         const selectedOption = select.options[select.selectedIndex] ?? select.options[0];
-        buttonLabel.textContent = selectedOption?.textContent?.trim() || '请选择';
+        buttonLabel.textContent = selectedOption?.textContent?.trim().replace(/\(\d+-\d+学年第\d学期\)/g, '') || '请选择';
     };
 
     const closeAllSelects = (exceptWrapper = null) => {
@@ -179,7 +179,7 @@ function initializeCustomSelects() {
             const optionButton = document.createElement('button');
             optionButton.type = 'button';
             optionButton.className = 'pku-art-select-option';
-            optionButton.textContent = option.textContent?.trim() || option.value || `选项 ${index + 1}`;
+            optionButton.textContent = option.textContent?.trim().replace(/\(\d+-\d+学年第\d学期\)/g, '') || option.value || `选项 ${index + 1}`;
             optionButton.dataset.value = option.value;
             optionButton.dataset.index = String(index);
             optionButton.disabled = option.disabled;

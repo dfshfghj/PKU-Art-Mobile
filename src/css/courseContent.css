@@ -567,6 +567,12 @@ li.divider,
         padding: 0 6px !important;
     }
 
+    .container > ul > li {
+        padding: 12px 6px !important;
+        border-radius: 0 !important;
+        border-bottom: 1px solid var(--gray-2) !important;
+    }
+
     .details h3 {
         padding-top: 16px;
         padding-bottom: 0;

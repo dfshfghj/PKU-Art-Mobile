@@ -367,3 +367,62 @@ form[name='uploadAssignmentForm'] .defaultSkin .mceMenu {
         border-bottom: none;
     }
 }
+
+@media (max-width: 768px) {
+    .submitStepTop {
+        display: none;
+    }
+
+    .stepcontent {
+        padding: 0 !important;
+    }
+    
+    #dataCollectionContainer > div[id^='step'] {
+        padding: 0;
+    }
+
+    ol li {
+        display: flex;
+    }
+
+    ol li .field {
+        display: flex;
+    }
+
+    #bbFilePicker_dropzone_newFile {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .metaSection {
+        display: flex;
+        align-items: center;
+        width: auto;
+        padding: 4px 12px;
+    }
+
+    .metaLabel {
+        padding: 0;
+    }
+
+    .metaSubInfo {
+        display: none;
+    }
+
+    #step3 .label {
+        display: none;
+    }
+
+    .vtbehelp {
+        display: none;
+    }
+
+    .tox-tinymce {
+        border: none;
+    }
+
+    .submitStepFixed, .submitStepBottom {
+        border: none;
+        bottom: calc(60px + var(--safe-area-inset-bottom, 0px));
+    }
+}
