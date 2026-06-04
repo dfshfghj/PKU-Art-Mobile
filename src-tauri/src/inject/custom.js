@@ -435,10 +435,10 @@ function onDocumentElementReady() {
   const courseClassGradeStyles = '#containerdiv{border:none;background:var(--c-background)}.gradeTableNew{display:flex;flex-direction:column;margin-top:50px}.gradeTableNew .grades_header{position:relative;width:100%;left:0;right:0;top:0;margin-top:1em;border:1px solid var(--c-border);border-bottom:none;border-radius:5px 5px 0 0;background:var(--c-card);display:flex;padding:0 10px;height:fit-content;box-sizing:border-box}.gradeTableNew .grades_header>div{color:var(--c-title);font-weight:700;font-size:11pt!important;margin-top:10px;border-bottom:1px solid var(--c-border);padding-bottom:10px!important;margin-bottom:4px;height:fit-content!important}@media (max-width: 480px){.gradeTableNew .grades_header{visibility:hidden;height:0}.gradeTableNew .cell.gradable:first-of-type{border-bottom:none}}.gradeTableNew>#grades_wrapper{width:100%;display:block;margin-top:0;border:1px solid var(--c-border);border-top:none;border-radius:0 0 5px 5px;background:var(--c-card);padding:0 10px 10px;box-sizing:border-box}#grades_wrapper>div{border-radius:5px;padding:5px 0;border:none;box-sizing:border-box;height:65px}#grades_wrapper>div:not(.calculatedRow):nth-child(2n){background:var(--gray-1)}#grades_wrapper>div:not(.calculatedRow):hover{background:var(--c-hover)}#grades_wrapper .calculatedRow{box-shadow:none;border:none;box-sizing:border-box;border-left:6px solid var(--gray-4);border-radius:0 5px 5px 0;background:var(--gray-2);background:linear-gradient(90deg,var(--gray-2) 10%,var(--c-card) 90%);margin-bottom:10px}#grades_wrapper .calculatedRow input{box-shadow:none;text-decoration:none!important;border:none;color:var(--c-text)}#grades_wrapper>div>div.gradable{height:100%}#grades_wrapper>div>div.gradable,#grades_wrapper>div>div.gradable>a{color:var(--gray-7);font-weight:700;font-size:14px}#grades_wrapper>div>div.gradable>a{width:fit-content;display:block;color:var(--blue-6);overflow:visible;margin-bottom:8px}#grades_wrapper>div>div.gradable>div{font-size:12px;display:inline;color:var(--c-text)}#grades_wrapper>div>div.gradable>div:first-child:before{display:block;margin-bottom:8px;content:""}#grades_wrapper>div>div.gradable>a+div:before{display:none}#grades_wrapper>div>div.gradable>div{margin-right:8px}#grades_wrapper>div>div.activity span{color:var(--c-text)}#grades_wrapper>div>div.grade span.grade{color:var(--cyan-7)}#grades_wrapper>div>div.grade span.pointsPossible{color:var(--c-text)}#grades_wrapper>div>div img.tooltip-icon{width:18px;content:var(--i-tip)}#grades_wrapper>div>div i.icon-comment:before{width:18px;background:var(--i-comment);background-size:contain!important;background-repeat:no-repeat;background-position:center center;content:".";color:transparent}#grades_wrapper>div>div .tooltip{background:var(--c-card);border:1px solid var(--c-border);box-shadow:none!important;color:var(--c-title);text-shadow:none}#grades_wrapper>div>div .tooltipContainer-left .tooltip:after{text-shadow:none}#submissionReceipts{background:var(--c-card);color:var(--c-text);font-family:sans-serif}#grades_wrapper>div{position:relative}#grades_wrapper .itemStats{position:absolute;top:0;right:0;padding:5px}div.lb-overlay{z-index:2000}.receiptBarHorizontal{position:static}body div.lb-wrapper{background-color:var(--c-card)!important}body div.lb-wrapper div.lb-header{color:var(--c-text);background:transparent}body div.lb-wrapper div.lb-content{background:transparent}body div.lb-wrapper div.lb-content .container{color:var(--c-text);border:none}@media (max-width: 480px){#grades_wrapper>div{height:auto}.gradeTableNew{margin-top:90px}.gradeTableNew .row.expanded{display:grid;grid-template-columns:1fr 1fr}.gradeTableNew .cell.grade{width:100%;grid-column:2}.gradeTableNew .cell.gradeStatus{width:100%;grid-row:2;text-align:right}.submitted_item_row.row{border-right:none!important;border-left:2px solid var(--cyan-7)!important}}';
   const courseListContentStyles = '#content_listContainer>li{background:var(--c-card);border:1px solid var(--c-border);border-radius:5px;margin-bottom:16px;display:flex;flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:center;align-content:center;height:fit-content}#content_listContainer>li:after{display:none}#content_listContainer>li>img{position:relative;top:0;left:0;padding:5px;border-radius:5px;height:32px;width:32px;box-sizing:border-box;margin-right:10px}#content_listContainer>li>img[src*=document],#content_listContainer>li>img[src*=file],#content_listContainer>li>img{content:var(--i-file);background:var(--red-3)}#content_listContainer>li>img[src*=folder]{content:var(--i-folder);background:var(--orange-3)}#content_listContainer>li>img[src*=link]{content:var(--i-link);background:var(--yellow-3)}#content_listContainer>li>div img[alt=链接的项目]{display:none}@media (max-width: 768px){#content_listContainer>li>img{background:transparent!important}}#content_listContainer>li>div.item{display:inline;flex-basis:calc(100% - 42px);padding:0}#content_listContainer>li>div.item *{text-decoration:none;color:var(--c-title)!important}@media (max-width: 768px){#content_listContainer>li>div.item *{font-weight:500}}#content_listContainer>li>div.details{padding-left:0;flex-basis:100%}#content_listContainer>li>div.details>*:not(.alignPanel):first-child{margin-top:10px!important;border-top:1px solid var(--c-border);padding-top:5px!important}#content_listContainer>li>div.details *{background:var(--c-card);border:none;color:var(--c-text)!important;line-height:1.6!important;font-family:inherit!important;font-size:14px!important;text-decoration:none!important;font-style:normal!important}#content_listContainer>li>div.details img{border-radius:5px}#content_listContainer>li>div.details img[alt=文件]{display:none}@media (max-width: 768px){#content_listContainer>li>div.details{padding:0 5px}}#content_listContainer>li>div.details *[style*=background]{background:none!important}#content_listContainer>li>div.details span[style*=text-decoration],#content_listContainer>li>div.details span[style*=color],#content_listContainer>li>div.details span[style*=background]{color:var(--c-text)!important;background:linear-gradient(180deg,transparent 90%,var(--red-2) 90%)!important}#content_listContainer>li>div.details a,#content_listContainer>li>div.details span[style*="color: #0000ff"]{color:var(--blue-5)!important;text-decoration:none}@media (min-width: 421px) and (max-width: 500px){.contentList{width:auto}}@media (max-width: 736px){ul#content_listContainer{background:var(--c-card);padding:10px 0 0}#content_listContainer>li{background:transparent;padding:0 20px;border:none;border-bottom:1px solid var(--c-border)}}';
   const courseViewAttemptStyles = "#containerdiv{border-radius:5px;background:var(--c-card);padding:16px;border:1px solid var(--c-border)}#containerdiv h3{padding:0;background:none;margin:0 0 10px;font-size:16px;top:0;color:var(--c-title)}#containerdiv>.stepcontent{background:var(--gray-1);box-sizing:border-box;border-radius:5px;margin-bottom:16px}#containerdiv>.stepcontent .label{color:var(--c-text);border-left:3px solid var(--c-accent);padding-left:6px}#containerdiv>.stepcontent .field{color:var(--c-title)}#containerdiv>.stepcontent li:last-child{padding-bottom:0;margin-bottom:0}#containerdiv>.columnStep>div{background:var(--gray-1);padding:5px;box-sizing:border-box;border-radius:5px;margin-bottom:16px}#containerdiv>.columnStep .attachments tr:first-child{border:none}#containerdiv>.columnStep .attachments tr:first-child *{color:var(--c-title);font-weight:700}#containerdiv>.columnStep .attachments tr:not(:first-child){border-top:1px solid var(--c-border)}#containerdiv>.columnStep .attachments tr:not(:first-child) *{padding-top:5px;padding-bottom:5px;color:var(--c-text)}#containerdiv>.iconlegend a{background:var(--c-label);border:1px solid var(--c-border);border-radius:5px;color:var(--c-text);box-shadow:none}#containerdiv>.backLink a{border-radius:5px 0;background:var(--c-card);box-shadow:none;color:var(--c-text)}#containerdiv>.backLink a:hover{background:var(--c-hover);color:var(--c-primary)}";
-  const courseStreamViewerStyles = "body{padding-top:var(--safe-area-inset-top, 0px)!important;padding-bottom:var(--safe-area-inset-bottom, 0px)!important;box-sizing:border-box}.locationPane{padding-top:60px!important;padding-bottom:60px!important}";
+  const courseStreamViewerStyles = "body{padding-top:var(--safe-area-inset-top, 0px)!important;padding-bottom:var(--safe-area-inset-bottom, 0px)!important;box-sizing:border-box}.locationPane{padding-top:60px!important;padding-bottom:60px!important}.filter-content-wrapper li>a{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}";
   const courseToolFrameStyles = '.tabWrapper-right,.bouncer[role=presentation]{width:fit-content}table.bouncer,.appTabs td.active,.appTabs a:hover span,.appTabs a:focus span{border:none}.topTabs .tabWrapper-right{height:fit-content;padding:0}#globalNavPageContentArea,#globalNavPageContentArea .locationPane,#contentPanel,#content,#containerdiv,#containerdiv>div,#iframe_wrap{height:fit-content!important}nav.navigationPane{height:100%}#side_nav:after{content:"PKU Art @ Arthals";display:block;background-color:var(--c-sidebar);position:absolute;bottom:20px;left:50%;transform:translate(-50%);color:var(--c-text);height:20px;z-index:99999;opacity:.3;visibility:visible!important}@media (max-width: 1037px){#globalNavPageContentArea{margin:0}.side-nav#side_nav{display:none}.side-nav#side_nav:before{position:absolute;visibility:hidden}.side-nav#side_nav:after{position:fixed;bottom:10px}.side-nav#side_nav #mybbListTools{flex-direction:row;align-items:center;justify-content:center}#side_nav #mybbListTools li{margin:auto 20px;padding:0 10px}.side-nav#side_nav #mybbListTools:before{visibility:hidden;width:0}.side-nav#side_nav #mybbListTools li.active{border-left:none;border-bottom:6px solid var(--c-accent)}.iframe-wrap#iframe_wrap{margin-left:0}#iframe_wrap.iframe-wrap{width:100%}}@media (max-width: 480px){#side_nav.side-nav{padding:20px 0 0}#side_nav #mybbListTools li[id*=MyGrades] span.menu-icon{position:relative}#side_nav #mybbListTools li span.menu-icon:after{position:absolute;top:100%;left:50%;transform:translate(-50%);white-space:nowrap}#side_nav #mybbListTools li{padding-bottom:20px}.iframe-wrap{padding:0!important}#iframe_wrap.iframe-wrap iframe{min-height:0px;height:calc(100vh - 60px - var(--safe-area-inset-bottom, 0px) - 60px - var(--safe-area-inset-top, 0px))!important;background:transparent}}@media (max-width: 667px){body.mybb-shell{overflow:hidden!important}}.locationPane{background-color:var(--c-background)}.contentPane .shadow{border:none}#pageTitleDiv{margin:0!important}.mybb-tools li a:focus,.mybb-tools li a:focus img{outline:none}#globalNavPageNavArea .bouncer *{vertical-align:middle;font-weight:700!important;overflow:visible;border:none}#globalNavPageNavArea a{margin:0}#globalNavPageContentArea,#globalNavPageContentArea .locationPane,#contentPanel,#content{background:var(--c-background)}#side_nav{background:var(--c-sidebar);border-right:1px solid var(--c-border);width:min(25%,300px)!important;padding:1em}#side_nav:before{content:"工具";display:block;width:100%;font-size:19px;text-align:left;color:var(--c-title);font-weight:700;padding:7px 18px 0}#side_nav #mybbListTools{display:flex;flex-direction:column;box-sizing:border-box;width:100%;padding:0 18px;margin-top:0}#side_nav #mybbListTools:before{z-index:1;content:"";color:transparent;visibility:visible;display:block;height:10px;position:relative;top:5px;width:60px;border-radius:50px;box-sizing:border-box;background-color:var(--c-accent);margin-bottom:21px}#side_nav #mybbListTools li{display:none;border:none;border-left:6px solid transparent}#side_nav #mybbListTools li[id*=Alerts],#side_nav #mybbListTools li[id*=MyGrades],#side_nav #mybbListTools li[id*=calendar]{display:block}#side_nav #mybbListTools li *{background-color:transparent;box-shadow:none;outline:none;text-decoration:none}#side_nav #mybbListTools li.active{border-left:6px solid var(--c-accent)}#side_nav #mybbListTools li span.menu-icon{padding-left:50px;border-radius:5px;display:flex;justify-content:left;flex-direction:row;justify-items:flex-start;align-items:center;text-decoration:none!important}#side_nav #mybbListTools li.active span.menu-icon{border-radius:0 5px 5px 0}#side_nav #mybbListTools li[id*=Alerts] span.menu-icon{background:var(--i-sandclock);background-repeat:no-repeat;background-size:25px 25px;background-position:10px;transition:all ease-in-out .15s}#side_nav #mybbListTools li[id*=Alerts] span.menu-icon:after{content:"禁止摸鱼";color:var(--c-text);display:block;font-size:16px}#side_nav #mybbListTools li[id*=MyGrades] span.menu-icon{background:var(--i-clover);background-repeat:no-repeat;background-size:25px 25px;background-position:10px;transition:all ease-in-out .15s}#side_nav #mybbListTools li[id*=MyGrades] span.menu-icon:after{content:"绩点高高";color:var(--c-text);display:block;font-size:16px}#side_nav #mybbListTools li[id*=calendar] span.menu-icon{background:var(--i-calendar);background-repeat:no-repeat;background-size:25px 25px;background-position:10px;transition:all ease-in-out .15s}#side_nav #mybbListTools li[id*=calendar] span.menu-icon:after{content:"晨钟暮鼓";color:var(--c-text);display:block;font-size:16px}#side_nav #mybbListTools li span.menu-icon:hover:after{color:var(--c-accent)}#side_nav #mybbListTools li span.menu-icon:hover{background-color:var(--c-hover)!important}#side_nav #mybbListTools li[id*=Alerts] img{display:none}#iframe_wrap{margin-left:min(25%,300px);position:relative;left:0;box-shadow:none;border:none;display:flex;align-items:center;justify-content:center;height:100%;padding-top:calc(10vh - 30px)}#iframe_wrap iframe{width:min(100%,1200px);height:80vh!important;border-radius:5px;border:1px solid var(--c-border);padding:5px;background:var(--c-card)}';
   const courseToolAlertStyles = 'html,#outer_left_stream_alerts{background:var(--c-card)}*{box-shadow:none!important}html,.locationPane,#contentPanel{padding:0;height:fit-content}#streamHeader_alerts,#streamHeader_alerts *{background:var(--c-card);text-shadow:none}#settingsContainer_alerts,#outer_left_stream_alerts{border:none}#settingsContainer_alerts{background:var(--c-card);border:1px solid var(--c-border);margin:10px}#settingsContainer_alerts *{color:var(--c-text)}#settingsContainer_alerts .streamSettingHelpLinks{border-top:1px solid var(--c-border)}#streamSettingButtons a{color:var(--cyan-5);border:none;border-radius:3px;font-size:12px;background:var(--c-label)}#streamSettingButtons a:hover{background:var(--cyan-2);color:var(--cyan-7)}#streamHeader_alerts{padding-bottom:0;height:100%;border:none}#openSettings_alerts{position:absolute}#streamHeader_alerts span.current-page,#streamHeader_alerts span.icon{display:none}#filter_by_alerts button{color:var(--c-text);border:1px solid var(--c-border);border-radius:.2rem}#filter_by_alerts button:hover{background:var(--c-hover);color:var(--c-accent)}#streamHeader_alerts .title-text{color:var(--c-title);font-weight:700;text-shadow:none;padding-left:12px}#streamHeader_alerts li{padding:0}#streamHeader_alerts a[id*=filter_type_all]{background:var(--c-label);border:1px solid var(--c-border)}#streamHeader_alerts h5{color:var(--c-title);font-weight:700}#streamHeader_alerts a{color:var(--c-text);line-height:1.6;text-decoration:none;border-radius:0;border:none;border-left:4px solid transparent}#streamHeader_alerts a.active{box-shadow:none;border-left:4px solid var(--c-accent)}#streamHeader_alerts a:hover{color:var(--red-5);background:var(--c-hover)}#stream_alerts #stream_currentFilterText_alerts,#stream_alerts .left_stream_wrapper{box-shadow:none;background:var(--c-card);border:none}#stream_currentFilterText_alerts{color:var(--c-text);font-weight:700;text-shadow:none}#left_stream_alerts>div,#left_stream_alerts>div *{color:var(--c-text);font-style:normal;font-family:sans-serif!important;border-radius:5px;border:none}#left_stream_alerts>div.stream_new_entry{background:inherit}#left_stream_alerts>div.stream_new_entry .stream_context:before{content:"New";color:var(--c-accent);font-size:12px;font-weight:700;padding:0 5px;background:var(--c-label);border-radius:5px;margin-right:5px}#left_stream_alerts>div:nth-child(2n){background:var(--gray-1)}#left_stream_alerts>div:hover{background:var(--c-card-hover)!important;transition:all ease-in .2s}#left_stream_alerts>div span.stream_area_name{color:var(--c-secondary)}#left_stream_alerts>div span.inlineContextMenu>a{color:var(--cyan-5);border:none;border-radius:3px;font-size:12px}#left_stream_alerts>div span.inlineContextMenu>a:hover{background:var(--cyan-2);color:var(--cyan-7)}#left_stream_alerts>div div.stream_details *{font-size:14px;line-height:1em;max-width:100%}span.open_stream_settings{background:var(--i-setting)!important;background-repeat:no-repeat;background-position:center center}.streamError{display:none}@media (max-width: 667px){#streamHeader_alerts{visibility:hidden}.vertical_filter .stream_header{z-index:auto}#left_stream_alerts .stream_item{display:flex;flex-direction:column}#outer_left_stream_alerts .stream_item .stream_datestamp{bottom:15px;right:20px}#outer_left_stream_alerts .stream_context{margin-bottom:10px}.stream_context_bottom{margin:0 60px 0 0}span.open_stream_settings{display:none!important}span.inlineContextMenu{display:block}}';
-  const courseToolGradeStyles = ".xq-title{color:var(--c-title);padding-top:15px;padding-left:5px;font-size:1rem}.course-list{margin:0 auto;padding-left:20px;padding-right:20px}.course-item{display:grid;align-items:center;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;gap:0 12px;padding:12px 0;border-bottom:1px solid #3a3a3a}.course-item:last-child{border-bottom:none}.credit-number{grid-row:1;grid-column:1;font-weight:700;font-size:1.2rem;color:var(--c-text);justify-self:center}.credit-label{grid-row:2;grid-column:1;font-size:.75rem;color:var(--c-text);justify-self:center}.course-name{grid-row:1;grid-column:2;color:var(--c-text);font-size:1.1rem;font-weight:500;min-width:0}.course-type{grid-row:2;grid-column:2;font-size:.85rem;color:var(--c-text)}.score{grid-row:1 / span 2;grid-column:3;text-align:right;font-weight:700;font-size:1.1rem;color:var(--c-text);align-self:center}@media (max-width: 800px){.stream_pages{flex-direction:column}.stream_header{height:80px!important;display:flex;flex-direction:column}.stream_header>h1{display:none}.stream_list_filter li{display:none}.stream_list_filter li.stream_filterlinks{display:block}li.stream_filterlinks a{font-size:16px;font-weight:600}.title-text{position:static;font-size:24px}.left_stream_wrapper{overflow-x:auto}.stream_left>div.stream_item:last-child{margin-bottom:0}.stream_left>div.stream_item .grade-value-wrapper{width:auto!important}#outer_left_stream_mygrades .stream_context{float:none;margin-bottom:0}#outer_left_stream_mygrades .stream_item .stream_datestamp{margin-bottom:0;float:right;bottom:unset;right:7px}.stream_context_bottom{display:inline-flex;margin-bottom:0;width:100%}.stream_context_bottom *{white-space:nowrap}.stream_left>div .stream_area_name{min-width:0;text-overflow:ellipsis}#outer_left_stream_mygrades.stream_page_left,#outer_left_stream_mygrades_d.stream_page_left{width:100%!important;flex-basis:auto}.stream_header{padding:0!important}.stream_left{height:auto!important;display:flex;flex-direction:column}.stream_list_filter>li{flex-basis:auto!important;flex:1;margin-bottom:10px;padding:10px 8px 5px;box-sizing:border-box;border-bottom:1px solid var(--c-border)}.stream_list_filter>li a{background:transparent;color:var(--c-text);border-bottom:2px solid transparent;transition:all ease-in-out .15s}.stream_list_filter>li a:hover{border-bottom:2px solid var(--c-accent);background:var(--c-hover);border-radius:5px 5px 0 0}#left_stream_mygrades .stream_item{height:min-content;margin:5px 0}iframe#right_stream_mygrades.stream_right{width:100%!important;flex-basis:auto;background:var(--gray-1)!important;border-radius:8px}body{overflow:auto}iframe.stream_right:not(.show_right_stream_mobile){display:none}.show_close_stream_button:after{background:var(--gray-1);border:var(--c-border)}}.stream_pages{display:flex;justify-content:space-between;width:100%}*{box-shadow:none!important;outline:none!important;font-style:normal!important;font-family:sans-serif!important}.stream_page_left,.stream_right,html{border:none!important;background:var(--c-card)!important}.stream_page_left{width:400px!important;flex-basis:400px;box-sizing:border-box}.stream_header>h1 span.current-page,.stream_header span.icon{display:none}.stream_header>h1 span.title-text{color:var(--c-title);font-weight:700;text-shadow:none;padding-left:12px}.stream_list_filter{display:flex;flex-wrap:wrap;height:fit-content}.stream_list_filter>li{background:transparent!important}.stream_list_filter>li:nth-child(1),.stream_list_filter>li:nth-child(2){flex-basis:50%;margin-bottom:10px;padding:10px 8px 5px;box-sizing:border-box;border-bottom:1px solid var(--c-border)}.stream_list_filter>li:nth-child(1) a,.stream_list_filter>li:nth-child(2) a{background:transparent;color:var(--c-text);border-bottom:2px solid transparent;transition:all ease-in-out .15s}.stream_list_filter>li:nth-child(1) a:hover,.stream_list_filter>li:nth-child(2) a:hover{border-bottom:2px solid var(--c-accent);background:var(--c-hover);border-radius:5px 5px 0 0}.stream_list_filter>li.stream_filterlinks_divider{border:none}.stream_list_filter>li a:hover{color:var(--c-accent)!important}.stream_list_filter>li:nth-child(4) button,.stream_list_filter>li:nth-child(5) button,.stream_list_filter>li:nth-child(6) button{color:var(--c-text);border-bottom:2px solid transparent;background:transparent;border:none!important}.stream_list_filter>li button.active{background:var(--c-hover)}.stream_header{border:none}.stream_dynamic_filters{background-color:var(--c-card)!important;border:1px solid var(--c-border);padding:10px;box-shadow:var(--c-box-shadow)!important}.stream_dynamic_filters h5{color:var(--c-title);font-size:15px!important;font-weight:700}.stream_dynamic_filters li a{color:var(--c-text);border-radius:3px;margin-bottom:2px}.stream_dynamic_filters li a:hover{background:var(--c-hover)}.stream_left>div{border:none!important;border-radius:6px}.stream_left>div:last-child{margin-bottom:50px}.stream_left>div *{background:transparent}.stream_left>div.active_stream_item{background:var(--c-hover)}.stream_left>div .grade-value{color:var(--c-secondary)}.stream_left>div.active_stream_item .grade-value{color:var(--cyan-7)}.stream_left>div .stream_context{color:var(--c-text)!important;font-size:14px!important}.stream_left>div .stream_area_name{background-color:var(--c-secondary);border-radius:100px;padding:0 5px;color:var(--c-card)}.stream_left>div.active_stream_item .stream_area_name{background-color:var(--cyan-7)}.stream_pages>.stream_settings{position:absolute;display:none!important}.stream_pages:after{position:absolute;display:none!important}iframe.stream_right{width:calc(100% - 420px)!important;flex-basis:calc(100% - 420px);padding:5px!important;box-sizing:border-box}.streamError{display:none}";
+  const courseToolGradeStyles = ".xq-title{color:var(--c-title);padding-top:15px;padding-left:5px;font-size:1rem}.course-list{margin:0 auto;padding-left:20px;padding-right:20px}.course-item{display:grid;align-items:center;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;gap:0 12px;padding:12px 0;border-bottom:1px solid #3a3a3a}.course-item:last-child{border-bottom:none}.credit-number{grid-row:1;grid-column:1;font-weight:700;font-size:1.2rem;color:var(--c-text);justify-self:center}.credit-label{grid-row:2;grid-column:1;font-size:.75rem;color:var(--c-text);justify-self:center}.course-name{grid-row:1;grid-column:2;color:var(--c-text);font-size:1.1rem;font-weight:500;min-width:0}.course-type{grid-row:2;grid-column:2;font-size:.85rem;color:var(--c-text)}.score{grid-row:1 / span 2;grid-column:3;text-align:right;font-weight:700;font-size:1.1rem;color:var(--c-text);align-self:center}@media (max-width: 800px){.stream_pages{flex-direction:column}.stream_header{height:80px!important;display:flex;flex-direction:column}.stream_header>h1{display:none}.stream_list_filter li{display:none}.stream_list_filter li.stream_filterlinks{display:block}li.stream_filterlinks a{font-size:16px;font-weight:600}.title-text{position:static;font-size:24px}.left_stream_wrapper{overflow-x:auto}.stream_left>div.stream_item:last-child{margin-bottom:0}.stream_left>div.stream_item .grade-value-wrapper{width:auto!important}#outer_left_stream_mygrades .stream_context,#outer_left_stream_mygrades_d .stream_context{float:none;margin-bottom:0}#outer_left_stream_mygrades .stream_item .stream_datestamp,#outer_left_stream_mygrades_d .stream_item .stream_datestamp{margin-bottom:0;float:right;bottom:unset;right:7px}.stream_context_bottom{display:inline-flex;margin-bottom:0;width:100%}.stream_context_bottom *{white-space:nowrap}.stream_left>div .stream_area_name{min-width:0;text-overflow:ellipsis}#outer_left_stream_mygrades.stream_page_left,#outer_left_stream_mygrades_d.stream_page_left{width:100%!important;flex-basis:auto}.stream_header{padding:0!important}.stream_left{height:auto!important;display:flex;flex-direction:column}.stream_list_filter>li{flex-basis:auto!important;flex:1;margin-bottom:10px;padding:10px 8px 5px;box-sizing:border-box;border-bottom:1px solid var(--c-border)}.stream_list_filter>li a{background:transparent;color:var(--c-text);border-bottom:2px solid transparent;transition:all ease-in-out .15s}.stream_list_filter>li a:hover{border-bottom:2px solid var(--c-accent);background:var(--c-hover);border-radius:5px 5px 0 0}#left_stream_mygrades .stream_item,#left_stream_mygrades_d .stream_item{height:min-content;margin:5px 0}iframe#right_stream_mygrades.stream_right,iframe#right_stream_mygrades_d.stream_right{width:100%!important;flex-basis:auto;background:var(--gray-1)!important;border-radius:8px}body{overflow:auto}iframe.stream_right:not(.show_right_stream_mobile){display:none}.show_close_stream_button:after{background:var(--gray-1);border:var(--c-border);z-index:999}}@media (max-width: 768px){.stream_header{height:auto!important;gap:10px;padding-bottom:12px!important}.stream_header>h1{display:none}.stream_list_filter{display:none!important}.pku-art-grades-mobile-controls{display:flex;gap:10px;width:100%;margin:0;padding:0 16px 4px;box-sizing:border-box;position:fixed;top:48px;z-index:501}.pku-art-grades-mobile-control{display:grid;gap:6px}.pku-art-grades-mobile-control .pku-art-select{display:flex;width:100%;min-width:0;border-radius:9999px;background-color:var(--gray-2)}.pku-art-grades-mobile-control .pku-art-select-trigger{padding:4px 10px}#globalNavPageNavArea{height:calc(82px + var(--safe-area-inset-top, 0px))!important}}.stream_pages{display:flex;justify-content:space-between;width:100%}*{box-shadow:none!important;outline:none!important;font-style:normal!important;font-family:sans-serif!important}.stream_page_left,.stream_right,html{border:none!important;background:var(--c-card)!important}.stream_page_left{width:400px!important;flex-basis:400px;box-sizing:border-box}.stream_header>h1 span.current-page,.stream_header span.icon{display:none}.stream_header>h1 span.title-text{color:var(--c-title);font-weight:700;text-shadow:none;padding-left:12px}.stream_list_filter{display:flex;flex-wrap:wrap;height:fit-content}.stream_list_filter>li{background:transparent!important}.stream_list_filter>li:nth-child(1),.stream_list_filter>li:nth-child(2){flex-basis:50%;margin-bottom:10px;padding:10px 8px 5px;box-sizing:border-box;border-bottom:1px solid var(--c-border)}.stream_list_filter>li:nth-child(1) a,.stream_list_filter>li:nth-child(2) a{background:transparent;color:var(--c-text);border-bottom:2px solid transparent;transition:all ease-in-out .15s}.stream_list_filter>li:nth-child(1) a:hover,.stream_list_filter>li:nth-child(2) a:hover{border-bottom:2px solid var(--c-accent);background:var(--c-hover);border-radius:5px 5px 0 0}.stream_list_filter>li.stream_filterlinks_divider{border:none}.stream_list_filter>li a:hover{color:var(--c-accent)!important}.stream_list_filter>li:nth-child(4) button,.stream_list_filter>li:nth-child(5) button,.stream_list_filter>li:nth-child(6) button{color:var(--c-text);border-bottom:2px solid transparent;background:transparent;border:none!important}.stream_list_filter>li button.active{background:var(--c-hover)}.stream_header{border:none}.stream_dynamic_filters{background-color:var(--c-card)!important;border:1px solid var(--c-border);padding:10px;box-shadow:var(--c-box-shadow)!important}.stream_dynamic_filters h5{color:var(--c-title);font-size:15px!important;font-weight:700}.stream_dynamic_filters li a{color:var(--c-text);border-radius:3px;margin-bottom:2px}.stream_dynamic_filters li a:hover{background:var(--c-hover)}.stream_left>div{border:none!important;border-radius:6px}.stream_left>div:last-child{margin-bottom:50px}.stream_left>div *{background:transparent}.stream_left>div.active_stream_item{background:var(--c-hover)}.stream_left>div .grade-value{color:var(--c-secondary)}.stream_left>div.active_stream_item .grade-value{color:var(--cyan-7)}.stream_left>div .stream_context{color:var(--c-text)!important;font-size:14px!important}.stream_left>div .stream_area_name{background-color:var(--c-secondary);border-radius:100px;padding:0 5px;color:var(--c-card)}.stream_left>div.active_stream_item .stream_area_name{background-color:var(--cyan-7)}.stream_pages>.stream_settings{position:absolute;display:none!important}.stream_pages:after{position:absolute;display:none!important}iframe.stream_right{width:calc(100% - 420px)!important;flex-basis:calc(100% - 420px);padding:5px!important;box-sizing:border-box}.streamError{display:none}";
   const courseToolGradeClassStyles = '*{box-shadow:none!important;text-shadow:none!important}body,html,.container{border:none;background:var(--c-card)!important}#streamDetailHeaderRight>span{display:none}#streamDetailHeaderRight h2.streamHeader a{color:var(--cyan-8);border:none}#streamDetailHeaderRight{height:fit-content;min-height:0;border-bottom:none;padding-bottom:0;margin-bottom:10px}#filterby a:hover{background:var(--c-hover)!important;border-bottom:2px solid var(--c-secondary)}#filterby a.active{color:var(--c-secondary);background:var(--c-card);border-bottom:2px solid var(--c-secondary)}.filterBarHorizontal select{border-radius:5px;padding:3px 10px}@media (max-width: 480px){.gradeTableNew{margin-top:0}.gradeTableNew .grades_header{visibility:hidden;height:0}.gradeTableNew .cell.gradable:first-of-type{border-bottom:none}}@media (max-width: 667px){body#learn-oe-body{overflow:hidden!important}body #streamDetail{border-top:none}}.gradeTableNew .grades_header{border-bottom:none;border-radius:5px 5px 0 0;background:var(--c-card);display:flex;padding:0 10px;height:fit-content;box-sizing:border-box}.gradeTableNew .grades_header .cell.grade{font-size:12px}.gradeTableNew .grades_header>div{color:var(--c-title);font-weight:700;font-size:11pt!important;font-family:sans-serif;margin-top:10px;border-bottom:1px solid var(--c-border);padding-bottom:10px!important;margin-bottom:4px;height:fit-content!important}.gradeTableNew #grades_wrapper{margin-top:90px!important}#grades_wrapper>div{border-radius:5px;padding:5px 0;border:none;box-sizing:border-box;height:65px;transition:all ease-in .2s}#grades_wrapper>div:last-child{margin-bottom:50px}#grades_wrapper>div:not(.calculatedRow):nth-child(2n){background:var(--gray-1)}#grades_wrapper>div:not(.calculatedRow):hover{background:var(--c-card-hover)}#grades_wrapper>div:first-child{margin-top:10px}#grades_wrapper .calculatedRow{box-shadow:none;border:none;box-sizing:border-box;border-left:6px solid var(--gray-4);border-radius:0 5px 5px 0;background:var(--gray-2);background:linear-gradient(90deg,var(--gray-2) 10%,var(--c-card) 90%);margin-bottom:10px}#grades_wrapper .calculatedRow input{box-shadow:none;text-decoration:none!important;border:none;color:var(--c-text)}#grades_wrapper>div>div.gradable{height:100%}#grades_wrapper>div>div.gradable,#grades_wrapper>div>div.gradable>a{color:var(--gray-7);font-weight:700;font-size:14px}#grades_wrapper>div>div.gradable>a{width:fit-content;display:block;color:var(--cyan-6);overflow:visible;margin-bottom:8px}#grades_wrapper>div>div.gradable>div{font-size:12px;display:inline;color:var(--c-text)}#grades_wrapper>div>div.gradable>div:first-child:before{display:block;margin-bottom:8px;content:""}#grades_wrapper>div>div.gradable>a+div:before{display:none}#grades_wrapper>div>div.gradable>div{margin-right:8px}#grades_wrapper>div>div.activity span{color:var(--c-text)}#grades_wrapper>div>div.grade span.grade{color:var(--cyan-7)}#grades_wrapper>div>div.grade span.pointsPossible{color:var(--c-text)}#grades_wrapper>div>div img.tooltip-icon{width:18px;content:var(--i-tip)}#grades_wrapper>div>div i.icon-comment:before{width:18px;background:var(--i-comment);background-size:contain!important;background-repeat:no-repeat;background-position:center center;content:".";color:transparent}#grades_wrapper>div>div .tooltip{background:var(--c-card);border:1px solid var(--c-border);box-shadow:none!important;color:var(--c-title);text-shadow:none}#grades_wrapper>div>div .tooltipContainer-left .tooltip:after{text-shadow:none}#submissionReceipts{background:var(--c-card);color:var(--c-text);font-family:sans-serif}#grades_wrapper>div{position:relative}#grades_wrapper .itemStats{position:absolute;top:0;right:0;padding:5px}div.lb-overlay{z-index:2000}body div.lb-wrapper{background-color:var(--c-card)!important}body div.lb-wrapper div.lb-header{color:var(--c-text);background:transparent}body div.lb-wrapper div.lb-content{background:transparent}body div.lb-wrapper div.lb-content .container{color:var(--c-text);border:none}@media (max-width: 480px){body,#streamDetail{background:var(--gray-1)!important}.stream-detail-page{padding:0 10px}#grades_wrapper>div{height:auto}.gradeTableNew .row.expanded{display:grid;grid-template-columns:1fr 1fr}.gradeTableNew .cell.grade{width:100%;grid-column:2}.gradeTableNew .cell.gradeStatus{width:100%;grid-row:2;text-align:right}.submitted_item_row.row{border-right:none!important;border-left:2px solid var(--cyan-7)!important}}';
   const courseToolGradeItemStyles = "*{box-shadow:none!important;text-shadow:none!important}body,html,.container{border:none;background:var(--c-card)!important}#streamDetailHeaderRight>span{display:none}#streamDetailHeaderRight h2.streamHeader a{color:var(--cyan-8);border:none}#streamDetailHeaderRight{height:fit-content;min-height:0;border-bottom:none;padding-bottom:0;margin-bottom:10px}.gb_feedback{border-left:6px solid var(--cyan-2);height:fit-content;padding:5px 10px;margin-bottom:10px}.gb_feedback:before{display:none}.gb_feedback p{font-family:sans-serif;font-size:14px;color:var(--c-text);line-height:1.6}.gb_feedback p:last-child{margin-bottom:0}.gradeTable *{background:var(--c-card);border:none!important;color:var(--c-text)!important}.gradeTable .gradeCellGrade{color:var(--cyan-7)!important}.gradesByDate input[type=button]{color:var(--c-text)!important;padding:3px 8px;text-decoration:none;border-radius:3px}.gradesByDate input[type=button]:hover{background:var(--cyan-2)}#grades_wrapper>div{position:relative}#grades_wrapper .itemStats{position:absolute;top:0;right:0;padding:5px}";
   const courseFileEmbedStyles = 'ul#content_listContainer{background:var(--cyan-1)}ul#content_listContainer>li:hover{background:var(--cyan-1);border:none;border-left:6px solid var(--cyan-6)}ul#content_listContainer>li{border-left:6px solid var(--cyan-6);border-top:none;border-bottom:none;padding:5px 10px;color:var(--c-text);display:flex;justify-content:center;align-items:center;flex-direction:column;transition:none;margin:0}ul#content_listContainer>li>*{padding:0;width:100%}ul#content_listContainer>li a{color:var(--cyan-6)}#pageTitleBar span.contextMenuContainer{display:none!important}.pku-art-pdf-viewer,embed,iframe[type="application/pdf"],object[type="application/pdf"]{margin-top:50px;position:relative;background:var(--c-card);border-radius:10px;border:1px solid var(--c-border);padding:10px;box-sizing:border-box}embed{height:min(1000px,80vh)!important}.pku-art-pdf-viewer{width:min(100%,1100px);margin-left:auto;margin-right:auto}.pku-art-pdf-toolbar{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;padding:4px 4px 14px;border-bottom:1px solid var(--c-border)}.pku-art-pdf-title-block{min-width:0}.pku-art-pdf-title{color:var(--c-title);font-size:18px;font-weight:700}.pku-art-pdf-status{color:var(--c-text);opacity:.75;margin-top:4px;word-break:break-word}.pku-art-pdf-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.pku-art-pdf-action{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 14px;border-radius:999px;background:var(--cyan-6);color:#fff!important;text-decoration:none;white-space:nowrap}.pku-art-pdf-frame{display:block;width:100%;height:min(1000px,80vh);margin-top:14px;border:0;border-radius:8px;background:#fff;overflow:hidden}@media (max-width: 720px){.pku-art-pdf-viewer{margin-top:16px;padding:12px}.pku-art-pdf-toolbar{flex-direction:column;align-items:stretch}.pku-art-pdf-actions{justify-content:flex-start}.pku-art-pdf-action{flex:1 1 140px}.pku-art-pdf-frame{height:75vh}}';
@@ -594,7 +594,10 @@ function onDocumentElementReady() {
       fileName: "courseToolAlert.css"
     },
     {
-      patterns: [/^https:\/\/course\.pku\.edu\.cn\/webapps\/streamViewer\/streamViewer\S*streamName=mygrades\S*$/],
+      patterns: [
+        /^https:\/\/course\.pku\.edu\.cn\/webapps\/streamViewer\/streamViewer\S*streamName=mygrades\S*$/,
+        /^https:\/\/course\.pku\.edu\.cn\/webapps\/streamViewer\/streamViewer\S*streamName=mygrades_d\S*$/
+      ],
       excludePatterns: [],
       styleContent: courseToolGradeStyles,
       fileName: "courseToolGrade.css"
@@ -3068,7 +3071,7 @@ ${downloadUrl}`);
   }
   async function portalLogin() {
     var _a;
-    if (!/^https:\/\/course\.pku\.edu\.cn\/webapps\/streamViewer\/streamViewer\S*streamName=mygrades\S*$/.test(window.location.href)) {
+    if (!/^https:\/\/course\.pku\.edu\.cn\/webapps\/streamViewer\/streamViewer\S*streamName=mygrades(_d)?\S*$/.test(window.location.href)) {
       return;
     }
     let cookie = "";
@@ -3225,21 +3228,202 @@ ${downloadUrl}`);
     observer.observe(document, { childList: true, subtree: true });
   }
   function insertGradesHeader() {
-    const initHeader = () => {
-      if (document.querySelector("ul.stream_list_filter li.stream_filterlinks.mobile_only")) {
+    const getGradesStreamName = () => {
+      const header = document.querySelector('ul.stream_list_filter[id^="filter_by_mygrades"]');
+      if (header instanceof HTMLUListElement && header.id.startsWith("filter_by_")) {
+        return header.id.replace("filter_by_", "");
+      }
+      const match = window.location.href.match(/streamName=(mygrades(?:_d)?)/);
+      return (match == null ? void 0 : match[1]) || null;
+    };
+    const getGradesElements = () => {
+      var _a, _b;
+      const streamName = getGradesStreamName();
+      if (!streamName) {
+        return null;
+      }
+      const header = document.querySelector(`ul.stream_list_filter#filter_by_${streamName}`);
+      if (!(header instanceof HTMLUListElement)) {
+        return null;
+      }
+      const primaryLinks = Array.from(header.querySelectorAll(":scope > li.stream_filterlinks:not(.mobile_only)"));
+      if (primaryLinks.length < 2) {
+        return null;
+      }
+      const allButton = header.querySelector(`#filter_type_all_${streamName}`);
+      const customButton = header.querySelector(`#filter_type_dynamic_${streamName}`);
+      if (!(allButton instanceof HTMLButtonElement) || !(customButton instanceof HTMLButtonElement)) {
+        return null;
+      }
+      const dynamicFiltersId = customButton.getAttribute("aria-controls") || `dynamic_filters_${streamName}`;
+      const dynamicFilters = document.getElementById(dynamicFiltersId);
+      const firstLink = (_a = primaryLinks[0]) == null ? void 0 : _a.querySelector("a");
+      const secondLink = (_b = primaryLinks[1]) == null ? void 0 : _b.querySelector("a");
+      if (!(firstLink instanceof HTMLAnchorElement) || !(secondLink instanceof HTMLAnchorElement)) {
+        return null;
+      }
+      return {
+        streamName,
+        header,
+        primaryLinks,
+        allButton,
+        customButton,
+        dynamicFilters,
+        firstLink,
+        secondLink
+      };
+    };
+    const isDynamicFiltersOpen = (dynamicFilters, customButton) => {
+      if (!(dynamicFilters instanceof HTMLElement) || !(customButton instanceof HTMLButtonElement)) {
+        return false;
+      }
+      return customButton.getAttribute("aria-expanded") === "true" && dynamicFilters.style.display !== "none";
+    };
+    const setDynamicFiltersState = ({ allButton, customButton, dynamicFilters }, expanded) => {
+      if (!(customButton instanceof HTMLButtonElement)) {
         return;
       }
-      const header = document.querySelector("ul.stream_list_filter");
+      customButton.setAttribute("aria-expanded", expanded ? "true" : "false");
+      customButton.classList.toggle("active", expanded);
+      if (allButton instanceof HTMLButtonElement) {
+        allButton.classList.toggle("active", !expanded);
+      }
+      if (dynamicFilters instanceof HTMLElement) {
+        dynamicFilters.style.display = expanded ? "block" : "none";
+      }
+    };
+    const syncGradesMobileControls = () => {
+      var _a;
+      const gradesElements = getGradesElements();
+      if (!gradesElements) {
+        return;
+      }
+      const { streamName, header, allButton, customButton, dynamicFilters, firstLink, secondLink } = gradesElements;
+      let controls = document.querySelector(`.pku-art-grades-mobile-controls[data-stream-name="${streamName}"]`);
+      if (!controls) {
+        controls = document.createElement("div");
+        controls.className = "pku-art-grades-mobile-controls";
+        controls.dataset.streamName = streamName;
+        controls.innerHTML = `
+                <div class="pku-art-grades-mobile-control">
+                    <select class="pku-art-grades-mobile-select" data-pku-art-native-select="enhance" aria-label="选择成绩视图">
+                        <option value="allCourses">所有课程</option>
+                        <option value="lastGrades">最后评分</option>
+                        <option value="progress">出分进度</option>
+                    </select>
+                </div>
+                <div class="pku-art-grades-mobile-control">
+                    <select class="pku-art-grades-mobile-select" data-pku-art-native-select="enhance" aria-label="筛选成绩结果">
+                        <option value="all">全部</option>
+                        <option value="custom">自定义</option>
+                    </select>
+                </div>
+            `;
+        const mobileControlsHost = document.querySelector("#learn-oe-body") || document.body;
+        mobileControlsHost == null ? void 0 : mobileControlsHost.appendChild(controls);
+      }
+      const viewSelect = controls.querySelector('select[aria-label="选择成绩视图"]');
+      const filterSelect = controls.querySelector('select[aria-label="筛选成绩结果"]');
+      if (!(viewSelect instanceof HTMLSelectElement) || !(filterSelect instanceof HTMLSelectElement)) {
+        return;
+      }
+      const currentUrl2 = window.location.href;
+      if (((_a = document.body) == null ? void 0 : _a.dataset.pkuArtGradesView) === "progress") {
+        viewSelect.value = "progress";
+      } else if (currentUrl2.includes("streamName=mygrades_d")) {
+        viewSelect.value = "lastGrades";
+      } else {
+        viewSelect.value = "allCourses";
+      }
+      filterSelect.value = isDynamicFiltersOpen(dynamicFilters, customButton) || customButton.classList.contains("active") ? "custom" : "all";
+      if (!viewSelect.dataset.pkuArtBound) {
+        viewSelect.dataset.pkuArtBound = "true";
+        viewSelect.addEventListener("change", () => {
+          var _a2, _b, _c;
+          switch (viewSelect.value) {
+            case "allCourses":
+              (_a2 = document.body) == null ? void 0 : _a2.removeAttribute("data-pku-art-grades-view");
+              firstLink.click();
+              break;
+            case "lastGrades":
+              (_b = document.body) == null ? void 0 : _b.removeAttribute("data-pku-art-grades-view");
+              secondLink.click();
+              break;
+            case "progress":
+              (_c = document.body) == null ? void 0 : _c.setAttribute("data-pku-art-grades-view", "progress");
+              displayGrades();
+              break;
+          }
+        });
+      }
+      if (!filterSelect.dataset.pkuArtBound) {
+        filterSelect.dataset.pkuArtBound = "true";
+        filterSelect.addEventListener("change", () => {
+          if (filterSelect.value === "custom") {
+            customButton.click();
+            requestAnimationFrame(() => {
+              if (!isDynamicFiltersOpen(dynamicFilters, customButton)) {
+                setDynamicFiltersState({ allButton, customButton, dynamicFilters }, true);
+              }
+              filterSelect.value = "custom";
+              filterSelect.dispatchEvent(new Event("input", { bubbles: true }));
+            });
+          } else {
+            allButton.click();
+            requestAnimationFrame(() => {
+              setDynamicFiltersState({ allButton, customButton, dynamicFilters }, false);
+              filterSelect.value = "all";
+              filterSelect.dispatchEvent(new Event("input", { bubbles: true }));
+            });
+          }
+        });
+      }
+      if (!customButton.dataset.pkuArtMobileSyncBound) {
+        customButton.dataset.pkuArtMobileSyncBound = "true";
+        customButton.addEventListener("click", () => {
+          requestAnimationFrame(() => {
+            filterSelect.value = isDynamicFiltersOpen(dynamicFilters, customButton) ? "custom" : "all";
+            filterSelect.dispatchEvent(new Event("input", { bubbles: true }));
+          });
+        });
+      }
+      if (!allButton.dataset.pkuArtMobileSyncBound) {
+        allButton.dataset.pkuArtMobileSyncBound = "true";
+        allButton.addEventListener("click", () => {
+          requestAnimationFrame(() => {
+            setDynamicFiltersState({ allButton, customButton, dynamicFilters }, false);
+            filterSelect.value = "all";
+            filterSelect.dispatchEvent(new Event("input", { bubbles: true }));
+          });
+        });
+      }
+    };
+    const initHeader = () => {
+      const gradesElements = getGradesElements();
+      if (!gradesElements) {
+        return;
+      }
+      const { header } = gradesElements;
+      if (header.querySelector('li.stream_filterlinks.mobile_only[data-pku-art-grades-progress="true"]')) {
+        syncGradesMobileControls();
+        return;
+      }
       const li = document.createElement("li");
       li.classList.add("stream_filterlinks");
       li.classList.add("mobile_only");
+      li.dataset.pkuArtGradesProgress = "true";
       li.innerHTML = "<a> 出分进度 </a>";
-      li.onclick = displayGrades;
+      li.onclick = () => {
+        var _a;
+        (_a = document.body) == null ? void 0 : _a.setAttribute("data-pku-art-grades-view", "progress");
+        displayGrades();
+        syncGradesMobileControls();
+      };
       header.appendChild(li);
+      syncGradesMobileControls();
     };
     const observer = new MutationObserver(() => {
-      if (document.querySelectorAll("ul.stream_list_filter li.stream_filterlinks").length >= 2) {
-        observer.disconnect();
+      if (document.querySelectorAll('ul.stream_list_filter[id^="filter_by_mygrades"] li.stream_filterlinks').length >= 2) {
         initHeader();
       }
     });

@@ -121,12 +121,14 @@
         width: auto !important;
     }
 
-    #outer_left_stream_mygrades .stream_context {
+    #outer_left_stream_mygrades .stream_context,
+    #outer_left_stream_mygrades_d .stream_context {
         float: none;
         margin-bottom: 0;
     }
 
-    #outer_left_stream_mygrades .stream_item .stream_datestamp {
+    #outer_left_stream_mygrades .stream_item .stream_datestamp,
+    #outer_left_stream_mygrades_d .stream_item .stream_datestamp {
         margin-bottom: 0;
         float: right;
         bottom: unset;
@@ -186,12 +188,14 @@
         border-radius: 5px 5px 0 0;
     }
 
-    #left_stream_mygrades .stream_item {
+    #left_stream_mygrades .stream_item,
+    #left_stream_mygrades_d .stream_item {
         height: min-content;
         margin: 5px 0;
     }
 
-    iframe#right_stream_mygrades.stream_right {
+    iframe#right_stream_mygrades.stream_right,
+    iframe#right_stream_mygrades_d.stream_right {
         width: 100% !important;
         flex-basis: auto;
         background: var(--gray-1) !important;
@@ -209,7 +213,57 @@
     .show_close_stream_button:after {
         background: var(--gray-1);
         border: var(--c-border);
+        z-index: 999;
         /*box-shadow: 0 0 0 100px rgba(0, 0, 0, 0.5) !important;*/
+    }
+}
+
+@media (max-width: 768px) {
+    .stream_header {
+        height: auto !important;
+        gap: 10px;
+        padding-bottom: 12px !important;
+    }
+
+    .stream_header > h1 {
+        display: none;
+    }
+
+    .stream_list_filter {
+        display: none !important;
+    }
+
+    .pku-art-grades-mobile-controls {
+        display: flex;
+        gap: 10px;
+        width: 100%;
+        margin: 0;
+        padding: 0 16px 4px;
+        box-sizing: border-box;
+        position: fixed;
+        top: 48px;
+        z-index: 501;
+    }
+
+    .pku-art-grades-mobile-control {
+        display: grid;
+        gap: 6px;
+    }
+
+    .pku-art-grades-mobile-control .pku-art-select {
+        display: flex;
+        width: 100%;
+        min-width: 0;
+        border-radius: 9999px;
+        background-color: var(--gray-2);
+    }
+
+    .pku-art-grades-mobile-control .pku-art-select-trigger {
+        padding: 4px 10px;
+    }
+
+    #globalNavPageNavArea {
+        height: calc(82px + var(--safe-area-inset-top, 0px)) !important;
     }
 }
 

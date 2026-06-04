@@ -181,7 +181,10 @@ const styleRules = [
         fileName: 'courseToolAlert.css',
     },
     {
-        patterns: [/^https:\/\/course\.pku\.edu\.cn\/webapps\/streamViewer\/streamViewer\S*streamName=mygrades\S*$/],
+        patterns: [
+            /^https:\/\/course\.pku\.edu\.cn\/webapps\/streamViewer\/streamViewer\S*streamName=mygrades\S*$/,
+            /^https:\/\/course\.pku\.edu\.cn\/webapps\/streamViewer\/streamViewer\S*streamName=mygrades_d\S*$/,
+        ],
         excludePatterns: [],
         styleContent: courseToolGradeStyles,
         fileName: 'courseToolGrade.css',

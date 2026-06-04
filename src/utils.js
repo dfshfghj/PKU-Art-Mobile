@@ -2033,7 +2033,7 @@ async function portalLogin() {
         return
     }
 
-    if (!/^https:\/\/course\.pku\.edu\.cn\/webapps\/streamViewer\/streamViewer\S*streamName=mygrades\S*$/.test(window.location.href)) {
+    if (!/^https:\/\/course\.pku\.edu\.cn\/webapps\/streamViewer\/streamViewer\S*streamName=mygrades(_d)?\S*$/.test(window.location.href)) {
         return
     }
 
@@ -2214,22 +2214,226 @@ function insertNav() {
 }
 
 function insertGradesHeader() {
+    const getGradesStreamName = () => {
+        const header = document.querySelector('ul.stream_list_filter[id^="filter_by_mygrades"]');
+        if (header instanceof HTMLUListElement && header.id.startsWith('filter_by_')) {
+            return header.id.replace('filter_by_', '');
+        }
+
+        const match = window.location.href.match(/streamName=(mygrades(?:_d)?)/);
+        return match?.[1] || null;
+    };
+
+    const getGradesElements = () => {
+        const streamName = getGradesStreamName();
+        if (!streamName) {
+            return null;
+        }
+
+        const header = document.querySelector(`ul.stream_list_filter#filter_by_${streamName}`);
+        if (!(header instanceof HTMLUListElement)) {
+            return null;
+        }
+
+        const primaryLinks = Array.from(header.querySelectorAll(':scope > li.stream_filterlinks:not(.mobile_only)'));
+        if (primaryLinks.length < 2) {
+            return null;
+        }
+
+        const allButton = header.querySelector(`#filter_type_all_${streamName}`);
+        const customButton = header.querySelector(`#filter_type_dynamic_${streamName}`);
+        if (!(allButton instanceof HTMLButtonElement) || !(customButton instanceof HTMLButtonElement)) {
+            return null;
+        }
+
+        const dynamicFiltersId = customButton.getAttribute('aria-controls') || `dynamic_filters_${streamName}`;
+        const dynamicFilters = document.getElementById(dynamicFiltersId);
+        const firstLink = primaryLinks[0]?.querySelector('a');
+        const secondLink = primaryLinks[1]?.querySelector('a');
+        if (!(firstLink instanceof HTMLAnchorElement) || !(secondLink instanceof HTMLAnchorElement)) {
+            return null;
+        }
+
+        return {
+            streamName,
+            header,
+            primaryLinks,
+            allButton,
+            customButton,
+            dynamicFilters,
+            firstLink,
+            secondLink,
+        };
+    };
+
+    const isDynamicFiltersOpen = (dynamicFilters, customButton) => {
+        if (!(dynamicFilters instanceof HTMLElement) || !(customButton instanceof HTMLButtonElement)) {
+            return false;
+        }
+
+        return customButton.getAttribute('aria-expanded') === 'true' && dynamicFilters.style.display !== 'none';
+    };
+
+    const setDynamicFiltersState = ({ allButton, customButton, dynamicFilters }, expanded) => {
+        if (!(customButton instanceof HTMLButtonElement)) {
+            return;
+        }
+
+        customButton.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        customButton.classList.toggle('active', expanded);
+
+        if (allButton instanceof HTMLButtonElement) {
+            allButton.classList.toggle('active', !expanded);
+        }
+
+        if (dynamicFilters instanceof HTMLElement) {
+            dynamicFilters.style.display = expanded ? 'block' : 'none';
+        }
+    };
+
+    const syncGradesMobileControls = () => {
+        const gradesElements = getGradesElements();
+        if (!gradesElements) {
+            return;
+        }
+
+        const { streamName, header, allButton, customButton, dynamicFilters, firstLink, secondLink } = gradesElements;
+
+        let controls = document.querySelector(`.pku-art-grades-mobile-controls[data-stream-name="${streamName}"]`);
+        if (!controls) {
+            controls = document.createElement('div');
+            controls.className = 'pku-art-grades-mobile-controls';
+            controls.dataset.streamName = streamName;
+            controls.innerHTML = `
+                <div class="pku-art-grades-mobile-control">
+                    <select class="pku-art-grades-mobile-select" data-pku-art-native-select="enhance" aria-label="选择成绩视图">
+                        <option value="allCourses">所有课程</option>
+                        <option value="lastGrades">最后评分</option>
+                        <option value="progress">出分进度</option>
+                    </select>
+                </div>
+                <div class="pku-art-grades-mobile-control">
+                    <select class="pku-art-grades-mobile-select" data-pku-art-native-select="enhance" aria-label="筛选成绩结果">
+                        <option value="all">全部</option>
+                        <option value="custom">自定义</option>
+                    </select>
+                </div>
+            `;
+            const mobileControlsHost = document.querySelector('#learn-oe-body') || document.body;
+            mobileControlsHost?.appendChild(controls);
+        }
+
+        const viewSelect = controls.querySelector('select[aria-label="选择成绩视图"]');
+        const filterSelect = controls.querySelector('select[aria-label="筛选成绩结果"]');
+        if (!(viewSelect instanceof HTMLSelectElement) || !(filterSelect instanceof HTMLSelectElement)) {
+            return;
+        }
+
+        const currentUrl = window.location.href;
+        if (document.body?.dataset.pkuArtGradesView === 'progress') {
+            viewSelect.value = 'progress';
+        } else if (currentUrl.includes('streamName=mygrades_d')) {
+            viewSelect.value = 'lastGrades';
+        } else {
+            viewSelect.value = 'allCourses';
+        }
+
+        filterSelect.value = isDynamicFiltersOpen(dynamicFilters, customButton) || customButton.classList.contains('active') ? 'custom' : 'all';
+
+        if (!viewSelect.dataset.pkuArtBound) {
+            viewSelect.dataset.pkuArtBound = 'true';
+            viewSelect.addEventListener('change', () => {
+                switch (viewSelect.value) {
+                case 'allCourses':
+                    document.body?.removeAttribute('data-pku-art-grades-view');
+                    firstLink.click();
+                    break;
+                case 'lastGrades':
+                    document.body?.removeAttribute('data-pku-art-grades-view');
+                    secondLink.click();
+                    break;
+                case 'progress':
+                    document.body?.setAttribute('data-pku-art-grades-view', 'progress');
+                    displayGrades();
+                    break;
+                default:
+                    break;
+                }
+            });
+        }
+
+        if (!filterSelect.dataset.pkuArtBound) {
+            filterSelect.dataset.pkuArtBound = 'true';
+            filterSelect.addEventListener('change', () => {
+                if (filterSelect.value === 'custom') {
+                    customButton.click();
+                    requestAnimationFrame(() => {
+                        if (!isDynamicFiltersOpen(dynamicFilters, customButton)) {
+                            setDynamicFiltersState({ allButton, customButton, dynamicFilters }, true);
+                        }
+                        filterSelect.value = 'custom';
+                        filterSelect.dispatchEvent(new Event('input', { bubbles: true }));
+                    });
+                } else {
+                    allButton.click();
+                    requestAnimationFrame(() => {
+                        setDynamicFiltersState({ allButton, customButton, dynamicFilters }, false);
+                        filterSelect.value = 'all';
+                        filterSelect.dispatchEvent(new Event('input', { bubbles: true }));
+                    });
+                }
+            });
+        }
+
+        if (!customButton.dataset.pkuArtMobileSyncBound) {
+            customButton.dataset.pkuArtMobileSyncBound = 'true';
+            customButton.addEventListener('click', () => {
+                requestAnimationFrame(() => {
+                    filterSelect.value = isDynamicFiltersOpen(dynamicFilters, customButton) ? 'custom' : 'all';
+                    filterSelect.dispatchEvent(new Event('input', { bubbles: true }));
+                });
+            });
+        }
+
+        if (!allButton.dataset.pkuArtMobileSyncBound) {
+            allButton.dataset.pkuArtMobileSyncBound = 'true';
+            allButton.addEventListener('click', () => {
+                requestAnimationFrame(() => {
+                    setDynamicFiltersState({ allButton, customButton, dynamicFilters }, false);
+                    filterSelect.value = 'all';
+                    filterSelect.dispatchEvent(new Event('input', { bubbles: true }));
+                });
+            });
+        }
+    };
+
     const initHeader = () => {
-        if (document.querySelector('ul.stream_list_filter li.stream_filterlinks.mobile_only')) {
+        const gradesElements = getGradesElements();
+        if (!gradesElements) {
+            return;
+        }
+
+        const { header } = gradesElements;
+        if (header.querySelector('li.stream_filterlinks.mobile_only[data-pku-art-grades-progress="true"]')) {
+            syncGradesMobileControls();
             return
         }
-        const header = document.querySelector('ul.stream_list_filter');
         const li = document.createElement('li');
         li.classList.add('stream_filterlinks');
         li.classList.add('mobile_only');
+        li.dataset.pkuArtGradesProgress = 'true';
         li.innerHTML = '<a> 出分进度 </a>';
-        li.onclick = displayGrades;
+        li.onclick = () => {
+            document.body?.setAttribute('data-pku-art-grades-view', 'progress');
+            displayGrades();
+            syncGradesMobileControls();
+        };
         header.appendChild(li);
+        syncGradesMobileControls();
     }
 
     const observer = new MutationObserver(() => {
-        if (document.querySelectorAll('ul.stream_list_filter li.stream_filterlinks').length >= 2) {
-            observer.disconnect();
+        if (document.querySelectorAll('ul.stream_list_filter[id^="filter_by_mygrades"] li.stream_filterlinks').length >= 2) {
             initHeader();
         }
     })
