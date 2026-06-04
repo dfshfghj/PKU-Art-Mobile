@@ -24,10 +24,7 @@
     margin-bottom: 10px;
 }
 
-.announcementFilter select#searchSelectId {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
+.pku-art-select {
     background: var(--c-card);
     color: var(--c-text);
     border: 1px solid var(--c-border);
@@ -38,6 +35,7 @@
     box-sizing: border-box;
     height: 30px;
     margin: 0;
+    flex: 1;
 }
 
 .announcementFilter a.genericButton {

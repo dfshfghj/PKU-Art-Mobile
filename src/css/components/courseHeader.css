@@ -330,7 +330,11 @@ body .global-nav-bar-wrap {
         width: min-content;
     }
 
-
+    body.pku-art-mobile-course-header-active .global-nav-bar-wrap {
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+    }
 
     body.pku-art-mobile-course-header-active .pku-art-menu-toggle-bar {
         flex: 0 0 auto;
@@ -393,6 +397,6 @@ body .global-nav-bar-wrap {
 
     body.pku-art-mobile-course-header-active #pageTitleHeader * {
         color: var(--c-title) !important;
-        font-size: 18px;
+        font-size: 16px;
     }
 }

@@ -126,7 +126,6 @@ const ALL_DOWNLOADABLE_EXTENSIONS = Object.values(
 
 const DOWNLOAD_PATH_PATTERNS = [
   "/bbcswebdav/",
-  "/content/file",
   "/download/",
   "/files/",
   "/attachments/",

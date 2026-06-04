@@ -126,6 +126,214 @@ function overrideSiteIcons() {
     document.addEventListener('DOMContentLoaded', observeHead);
 }
 
+function initializeCustomSelects() {
+    const enhancedAttribute = 'data-pku-art-select-enhanced';
+    const hiddenClassName = 'pku-art-native-select';
+    const openClassName = 'is-open';
+
+    const shouldEnhanceSelect = (select) => {
+        if (!(select instanceof HTMLSelectElement)) {
+            return false;
+        }
+
+        if (select.multiple || select.size > 1) {
+            return false;
+        }
+
+        if (select.classList.contains('selectized')) {
+            return false;
+        }
+
+        if (select.dataset.pkuArtNativeSelect === 'skip' || select.dataset.pkuArtSelectEnhanced === 'true') {
+            return false;
+        }
+
+        if (select.closest('.pku-art-select')) {
+            return false;
+        }
+
+        return select.options.length > 0;
+    };
+
+    const updateSelectButtonLabel = (select, buttonLabel) => {
+        const selectedOption = select.options[select.selectedIndex] ?? select.options[0];
+        buttonLabel.textContent = selectedOption?.textContent?.trim() || '请选择';
+    };
+
+    const closeAllSelects = (exceptWrapper = null) => {
+        document.querySelectorAll(`.pku-art-select.${openClassName}`).forEach((wrapper) => {
+            if (wrapper !== exceptWrapper) {
+                wrapper.classList.remove(openClassName);
+                const trigger = wrapper.querySelector('.pku-art-select-trigger');
+                if (trigger) {
+                    trigger.setAttribute('aria-expanded', 'false');
+                }
+            }
+        });
+    };
+
+    const syncSelectOptions = (select, wrapper, buttonLabel, optionsPanel) => {
+        optionsPanel.replaceChildren();
+
+        Array.from(select.options).forEach((option, index) => {
+            const optionButton = document.createElement('button');
+            optionButton.type = 'button';
+            optionButton.className = 'pku-art-select-option';
+            optionButton.textContent = option.textContent?.trim() || option.value || `选项 ${index + 1}`;
+            optionButton.dataset.value = option.value;
+            optionButton.dataset.index = String(index);
+            optionButton.disabled = option.disabled;
+
+            if (option.selected) {
+                optionButton.classList.add('is-selected');
+                optionButton.setAttribute('aria-selected', 'true');
+            } else {
+                optionButton.setAttribute('aria-selected', 'false');
+            }
+
+            optionButton.addEventListener('click', () => {
+                if (option.disabled || select.disabled) {
+                    return;
+                }
+
+                select.selectedIndex = index;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                closeAllSelects();
+            });
+
+            optionsPanel.appendChild(optionButton);
+        });
+
+        updateSelectButtonLabel(select, buttonLabel);
+        wrapper.classList.toggle('is-disabled', select.disabled);
+    };
+
+    const enhanceSelect = (select) => {
+        if (!shouldEnhanceSelect(select)) {
+            return;
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'pku-art-select';
+        wrapper.setAttribute('data-select-name', select.name || '');
+
+        const trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.className = 'pku-art-select-trigger';
+        trigger.setAttribute('aria-haspopup', 'listbox');
+        trigger.setAttribute('aria-expanded', 'false');
+
+        const buttonLabel = document.createElement('span');
+        buttonLabel.className = 'pku-art-select-label';
+
+        const buttonIcon = document.createElement('span');
+        buttonIcon.className = 'pku-art-select-icon';
+        buttonIcon.setAttribute('aria-hidden', 'true');
+
+        trigger.append(buttonLabel, buttonIcon);
+
+        const optionsPanel = document.createElement('div');
+        optionsPanel.className = 'pku-art-select-options';
+        optionsPanel.setAttribute('role', 'listbox');
+
+        select.classList.add(hiddenClassName);
+        select.dataset.pkuArtSelectEnhanced = 'true';
+        select.setAttribute(enhancedAttribute, 'true');
+
+        select.parentNode.insertBefore(wrapper, select);
+        wrapper.append(trigger, select, optionsPanel);
+
+        const syncFromSelect = () => {
+            syncSelectOptions(select, wrapper, buttonLabel, optionsPanel);
+        };
+
+        syncFromSelect();
+
+        trigger.addEventListener('click', () => {
+            if (select.disabled) {
+                return;
+            }
+
+            const willOpen = !wrapper.classList.contains(openClassName);
+            closeAllSelects(wrapper);
+            wrapper.classList.toggle(openClassName, willOpen);
+            trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        });
+
+        trigger.addEventListener('keydown', (event) => {
+            if (select.disabled) {
+                return;
+            }
+
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                wrapper.classList.add(openClassName);
+                trigger.setAttribute('aria-expanded', 'true');
+            }
+
+            if (event.key === 'Escape') {
+                wrapper.classList.remove(openClassName);
+                trigger.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        select.addEventListener('change', syncFromSelect);
+
+        const selectObserver = new MutationObserver(syncFromSelect);
+        selectObserver.observe(select, {
+            attributes: true,
+            childList: true,
+            subtree: true,
+        });
+    };
+
+    const scanSelects = (root = document) => {
+        const selects = root instanceof HTMLSelectElement ? [root] : root.querySelectorAll?.('select');
+        selects?.forEach((select) => {
+            enhanceSelect(select);
+        });
+    };
+
+    document.addEventListener('click', (event) => {
+        if (!(event.target instanceof Node) || event.target.closest('.pku-art-select')) {
+            return;
+        }
+
+        closeAllSelects();
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeAllSelects();
+        }
+    });
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => scanSelects());
+    } else {
+        scanSelects();
+    }
+
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (!(node instanceof Element)) {
+                    return;
+                }
+
+                if (node.matches('select')) {
+                    scanSelects(node);
+                    return;
+                }
+
+                scanSelects(node);
+            });
+        });
+    });
+
+    observer.observe(document.body ?? document.documentElement, { childList: true, subtree: true });
+}
+
 function removeCourseSerialNumbers() {
     const url = window.location.href;
 
@@ -1164,16 +1372,29 @@ function initializeSettingButton() {
         }
 
         const globalNavBarWrap = document.querySelector('.global-nav-bar-wrap');
+        if (!globalNavBarWrap) {
+            return;
+        }
+
         const settingButton = document.createElement('div');
         settingButton.className = 'pku-art-setting-bar global-nav-bar mobile-only';
         settingButton.innerHTML = `<a href="https://course.pku.edu.cn/webapps/blackboard/execute/personalInfo" style="background: var(--i-setting) no-repeat center; width: 100%; height: 100%;"></a>`;
-        globalNavBarWrap.appendChild(settingButton);
-    }
+
+        const spacer = globalNavBarWrap.querySelector('.pku-art-menu-spacer');
+        if (spacer) {
+            spacer.insertAdjacentElement('afterend', settingButton);
+        } else {
+            globalNavBarWrap.appendChild(settingButton);
+        }
+    };
 
     const observer = new MutationObserver(() => {
-        if (document.querySelector('.global-nav-bar-wrap')) {
-            observer.disconnect();
+        if (document.querySelector('.global-nav-bar-wrap') && document.querySelector('.pku-art-menu-spacer')) {
             addSettingButton();
+        }
+
+        if (document.querySelector('.pku-art-setting-bar')) {
+            observer.disconnect();
         }
     });
 
@@ -2138,6 +2359,7 @@ export {
     initializeLogoNavigation,
     ensureSidebarVisible,
     overrideSiteIcons,
+    initializeCustomSelects,
     removeCourseSerialNumbers,
     initializeDirectDownload,
     initializeSparkDownloadRename,
