@@ -117,7 +117,6 @@ embed {
     display: block;
     width: 100%;
     height: min(1000px, 80vh);
-    margin-top: 14px;
     border: 0;
     border-radius: 8px;
     background: #fff;
@@ -125,11 +124,13 @@ embed {
 }
 
 @media (max-width: 720px) {
-    .pku-art-pdf-viewer {
-        margin-top: 16px;
-        padding: 12px;
+    .contentList, .buildList, .contentListPlain, .announcementList {
+        margin: 0;
     }
-
+    .pku-art-pdf-viewer {
+        padding: 0;
+        margin: 0;
+    }
     .pku-art-pdf-toolbar {
         flex-direction: column;
         align-items: stretch;

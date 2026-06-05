@@ -517,6 +517,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  function getBlackboardViewOverrideUrl(anchorElement, fallbackUrl) {
+    const inlineOnclick = anchorElement?.getAttribute("onclick") || "";
+    if (!inlineOnclick || !fallbackUrl.includes("/bbcswebdav/")) {
+      return null;
+    }
+
+    const match = inlineOnclick.match(/this\.href\s*=\s*['"]([^'"]+)['"]/i);
+    if (!match?.[1]) {
+      return null;
+    }
+
+    try {
+      const overrideUrl = new URL(match[1], window.location.href);
+      const isBlackboardViewPath =
+        overrideUrl.pathname === "/webapps/blackboard/execute/content/file" &&
+        overrideUrl.searchParams.get("cmd") === "view";
+
+      return isBlackboardViewPath ? overrideUrl.href : null;
+    } catch (_error) {
+      return null;
+    }
+  }
+
   const detectAnchorElementClick = (e) => {
     // Safety check: ensure e.target exists and is an Element with closest method
     if (!e.target || typeof e.target.closest !== "function") {
@@ -528,12 +551,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const target = anchorElement.target;
       const hrefUrl = new URL(anchorElement.href);
       const absoluteUrl = hrefUrl.href;
+      const blackboardViewOverrideUrl = getBlackboardViewOverrideUrl(
+        anchorElement,
+        absoluteUrl,
+      );
+      const navigationUrl = blackboardViewOverrideUrl || absoluteUrl;
       const userLanguage = getUserLanguage();
       const filename = getSuggestedDownloadFilename(anchorElement, absoluteUrl);
 
       // Process download links for Rust to handle before target-based navigation
       // logic, since Blackboard file links often use target="_blank".
       if (
+        !blackboardViewOverrideUrl &&
         isDownloadRequired(absoluteUrl, anchorElement, e) &&
         !isSpecialDownload(absoluteUrl)
       ) {
@@ -551,11 +580,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (forceInternalNavigation) {
           e.preventDefault();
           e.stopImmediatePropagation();
-          window.location.href = absoluteUrl;
+          window.location.href = navigationUrl;
           return;
         }
 
-        if (isSameDomain(absoluteUrl)) {
+        if (isSameDomain(navigationUrl)) {
           // For same-domain links, let the browser handle it naturally
           return;
         }
@@ -564,11 +593,11 @@ document.addEventListener("DOMContentLoaded", () => {
         e.stopImmediatePropagation();
         const newWindow = originalWindowOpen.call(
           window,
-          absoluteUrl,
+          navigationUrl,
           "_blank",
           "width=1200,height=800,scrollbars=yes,resizable=yes",
         );
-        if (!newWindow) handleExternalLink(absoluteUrl);
+        if (!newWindow) handleExternalLink(navigationUrl);
         return;
       }
 
@@ -576,18 +605,18 @@ document.addEventListener("DOMContentLoaded", () => {
         if (forceInternalNavigation) {
           e.preventDefault();
           e.stopImmediatePropagation();
-          window.location.href = absoluteUrl;
+          window.location.href = navigationUrl;
           return;
         }
 
         e.preventDefault();
-        handleExternalLink(absoluteUrl);
+        handleExternalLink(navigationUrl);
         return;
       }
 
       // Handle regular links: same domain allows normal navigation, cross-domain opens new window
       if (!target || target === "_self") {
-        if (!isSameDomain(absoluteUrl)) {
+        if (!isSameDomain(navigationUrl)) {
           if (forceInternalNavigation) {
             return;
           }
@@ -596,11 +625,11 @@ document.addEventListener("DOMContentLoaded", () => {
           e.stopImmediatePropagation();
           const newWindow = originalWindowOpen.call(
             window,
-            absoluteUrl,
+            navigationUrl,
             "_blank",
             "width=1200,height=800,scrollbars=yes,resizable=yes",
           );
-          if (!newWindow) handleExternalLink(absoluteUrl);
+          if (!newWindow) handleExternalLink(navigationUrl);
         }
       }
     }
