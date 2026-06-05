@@ -222,18 +222,12 @@ html #global-nav-bar-wrap {
     display: none;
 }
 
-/* 浮现动画 */
-#column0,
-#column1,
-#column2 {
-    -webkit-animation: fadeInUpStablePixel 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-    animation: fadeInUpStablePixel 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-}
-
 @media (min-width: 1038px) { 
-    #column0 {
-        -webkit-animation: fadeInLeftStablePixel 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        animation: fadeInLeftStablePixel 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    #column0,
+    #column1,
+    #column2 {
+        -webkit-animation: fadeInUpStablePixel 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        animation: fadeInUpStablePixel 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
     }
 }
 
@@ -248,6 +242,18 @@ html #global-nav-bar-wrap {
         margin-left: 1em;
         height: fit-content;
     }
+}
+
+@media (max-width: 768px) {
+    #column1.clearfix {
+        margin-top: 0;
+    }
+
+    .containerPortal .portlet.clearfix {
+        padding: 0;
+        margin: 0;
+        margin-top: 0 !important;
+    }  
 }
 
 #column1 .portlet,
