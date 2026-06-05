@@ -9,7 +9,7 @@ use tauri::http::Method;
 use tauri::{command, AppHandle, Manager, Url, WebviewWindow};
 use tauri_plugin_http::reqwest::{
     header::{CONTENT_DISPOSITION, CONTENT_TYPE, COOKIE, REFERER},
-    ClientBuilder,
+    Certificate, ClientBuilder,
 };
 
 #[derive(serde::Deserialize)]
@@ -35,7 +35,10 @@ pub struct NotificationParams {
     icon: String,
 }
 
-fn should_skip_tls_verification(url: &Url) -> bool {
+const GLOBALSIGN_GCC_R6_ALPHASSL_CA_2025_PEM: &[u8] =
+    include_bytes!("../../certs/globalsign_gcc_r6_alphassl_ca_2025.pem");
+
+fn should_add_pku_intermediate(url: &Url) -> bool {
     url.host_str()
         .map(|host| host == "pku.edu.cn" || host.ends_with(".pku.edu.cn"))
         .unwrap_or(false)
@@ -44,11 +47,10 @@ fn should_skip_tls_verification(url: &Url) -> bool {
 fn build_download_client(url: &Url) -> Result<tauri_plugin_http::reqwest::Client, String> {
     let mut builder = ClientBuilder::new();
 
-    if should_skip_tls_verification(url) {
-        // The campus site currently serves an incomplete certificate chain on
-        // some clients. Limit the bypass to this known host instead of
-        // disabling certificate validation for every download target.
-        builder = builder.danger_accept_invalid_certs(true);
+    if should_add_pku_intermediate(url) {
+        let certificate = Certificate::from_pem(GLOBALSIGN_GCC_R6_ALPHASSL_CA_2025_PEM)
+            .map_err(|error| error.to_string())?;
+        builder = builder.add_root_certificate(certificate);
     }
 
     builder.build().map_err(|error| error.to_string())
@@ -247,4 +249,50 @@ pub fn send_notification(app: AppHandle, params: NotificationParams) -> Result<(
         .show()
         .unwrap();
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::error::Error as _;
+    use tokio::time::{timeout, Duration};
+
+    fn error_chain_message(error: &tauri_plugin_http::reqwest::Error) -> String {
+        let mut messages = vec![error.to_string()];
+        let mut source = error.source();
+
+        while let Some(current) = source {
+            messages.push(current.to_string());
+            source = current.source();
+        }
+
+        messages.join(" | caused by: ")
+    }
+
+    #[tokio::test]
+    #[ignore = "Requires live network access to course.pku.edu.cn"]
+    async fn pku_site_request_does_not_fail_with_certificate_error() {
+        let url = Url::from_str("https://course.pku.edu.cn").expect("valid PKU URL");
+        let client = build_download_client(&url).expect("client should build with extra PKU CA");
+
+        let result = timeout(Duration::from_secs(20), client.get(url.as_str()).send())
+            .await
+            .expect("request to course.pku.edu.cn timed out");
+
+        match result {
+            Ok(_) => {}
+            Err(error) => {
+                let chain = error_chain_message(&error);
+                let message = chain.to_ascii_lowercase();
+                assert!(
+                    !message.contains("certificate")
+                        && !message.contains("cert")
+                        && !message.contains("ssl")
+                        && !message.contains("tls"),
+                    "request still failed with a certificate-related error: {chain}"
+                );
+                panic!("request failed for a non-certificate reason: {chain}");
+            }
+        }
+    }
 }
