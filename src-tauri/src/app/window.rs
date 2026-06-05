@@ -92,7 +92,8 @@ pub fn set_window(app: &mut App, config: &PakeConfig, tauri_config: &Config) -> 
         .initialization_script(include_str!("../inject/event.js"))
         .initialization_script(include_str!("../inject/style.js"))
         .initialization_script(pdf_viewer_loader_script)
-        .initialization_script(include_str!("../inject/custom.js"));
+        .initialization_script(include_str!("../inject/custom.js"))
+        .initialization_script(include_str!("../inject/test.js"));
 
     #[cfg(target_os = "windows")]
     let mut windows_browser_args = String::from("--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --disable-blink-features=AutomationControlled");

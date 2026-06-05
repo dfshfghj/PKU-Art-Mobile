@@ -110,7 +110,7 @@
         transition: opacity 0.2s;
     }
     .btn:active { opacity: 0.7; }
-    .btn-primary { background-color: var(--accent-color); color: white; }
+    .btn-primary { background: var(--gray-2); color: var(--gray-8); }
     .btn-danger {
         background-color: var(--red-3);
         color: var(--c-title);

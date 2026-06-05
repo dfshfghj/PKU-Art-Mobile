@@ -2491,9 +2491,6 @@ function initializeSettingPage() {
         settingPanel.innerHTML = `
 <div class="pku-art-container">
     <div class="card user-profile">
-        <div class="user-avatar">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-        </div>
         <div class="user-info">
             <h2 id="display-username">${userName}</h2>
         </div>
@@ -2517,7 +2514,7 @@ function initializeSettingPage() {
             </div>
         </div>
     </div>
-    <button class="btn btn-danger" id="logoutBtn"><a href="/webapps/login/?action=logout">退出登录</a></button>
+    <button class="btn btn-primary" id="logoutBtn"><a href="/webapps/login/?action=logout">退出登录</a></button>
 </div>`;
         locationPane.appendChild(settingPanel);
 
