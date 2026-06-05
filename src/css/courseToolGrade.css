@@ -241,7 +241,7 @@
         padding: 0 16px 4px;
         box-sizing: border-box;
         position: fixed;
-        top: 48px;
+        top: calc(48px + var(--safe-area-inset-top, 0px));
         z-index: 501;
     }
 
