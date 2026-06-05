@@ -35,8 +35,6 @@ import {
 } from './utils.js';
 
 const PDF_FILE_VIEW_URL_PATTERN = /^https:\/\/course\.pku\.edu\.cn\/webapps\/\S*content\/file\?cmd=view\S*$/;
-const IS_TAURI_BUILD = import.meta.env.MODE === 'tauri';
-
 function isInjectedPdfViewerFrame() {
     return window.location.protocol === 'blob:' || window.frameElement?.classList?.contains('pku-art-pdf-frame');
 }
@@ -46,28 +44,18 @@ function initializePdfViewerFallbackOnDemand() {
         return;
     }
 
-    if (typeof window.__PKU_ART_LOAD_PDF_VIEWER__ === 'function') {
-        window.__PKU_ART_LOAD_PDF_VIEWER__();
+    if (typeof window.__PKU_ART_LOAD_PDF_VIEWER__ !== 'function') {
         return;
     }
 
-    if (IS_TAURI_BUILD) {
-        console.warn('[PKU Art] PDF viewer loader is unavailable in Tauri build');
-        return;
-    }
-
-    import('./pdfViewer.js')
-        .then(({ initializePdfViewerFallback }) => {
-            initializePdfViewerFallback();
-        })
-        .catch((error) => {
-            console.error('[PKU Art] Failed to load PDF viewer fallback', error);
-        });
+    window.__PKU_ART_LOAD_PDF_VIEWER__();
 }
 
 if (!isInjectedPdfViewerFrame()) {
 insertNav();
 applyStylesForCurrentPage();
+initializeMenuToggleButton();
+initializeMobileCourseHeaderLayout();
 initializePdfViewerFallbackOnDemand();
 initializeThemeManager();
 initializeThemeToggleButton();
@@ -89,8 +77,6 @@ removeConflictJQuery();
 removeBootstrap();
 initializeBottomNavigationBar();
 formatAnnouncementTime();
-initializeMenuToggleButton();
-initializeMobileCourseHeaderLayout();
 initializePageTitleText();
 convertBlankLinksToTop();
 setViewportMeta();
