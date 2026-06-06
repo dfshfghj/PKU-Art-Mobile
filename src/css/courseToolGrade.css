@@ -81,6 +81,15 @@
         flex-direction: column;
     }
 
+    #right_stream_mygrades,
+    #right_stream_mygrades_d {
+        position: fixed;
+        top: 200px;
+        min-height: 0;
+        height: calc(100vh - 200px - 60px - var(--safe-area-inset-bottom, 0px)) !important;
+        transition: all 0.2s ease-in-out;
+    }
+
     .stream_header {
         height: 80px !important;
         display: flex;
@@ -206,15 +215,28 @@
         overflow: auto;
     }
 
-    iframe.stream_right:not(.show_right_stream_mobile) {
-        display: none;
+    iframe.stream_right#right_stream_mygrades:not(.show_right_stream_mobile),
+    iframe.stream_right#right_stream_mygrades_d:not(.show_right_stream_mobile) {
+        top: 100vh;
     }
 
-    .show_close_stream_button:after {
+    .stream_header:after {
         background: var(--gray-1);
         border: var(--c-border);
         z-index: 999;
+        position: fixed;
+        top: 175px;
         /*box-shadow: 0 0 0 100px rgba(0, 0, 0, 0.5) !important;*/
+    }
+
+    .stream_header:not(.show_close_stream_button):after {
+        content: "x";
+        opacity: 0;
+    }
+
+    .stream_header.show_close_stream_button:after {
+        opacity: 1;
+        transition: opacity 0.2s ease-in;
     }
 }
 

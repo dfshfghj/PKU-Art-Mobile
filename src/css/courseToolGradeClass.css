@@ -10,11 +10,15 @@
     text-shadow: none !important;
 }
 
+html:not([data-mce-style]) {
+    min-height: 0;
+}
+
 body,
 html,
 .container {
     border: none;
-    background: var(--c-card) !important;
+    background: transparent !important;
 }
 
 /* 标题栏 */
@@ -71,10 +75,6 @@ html,
 }
 
 @media (max-width: 667px) {
-    body#learn-oe-body {
-        overflow: hidden !important;
-    }
-
     body #streamDetail {
         border-top: none;
     }
@@ -285,11 +285,11 @@ body div.lb-wrapper div.lb-content .container {
     border: none;
 }
 
+.stream-detail-contents {
+    float: none;
+}
+
 @media (max-width: 480px) {
-    body,
-    #streamDetail {
-        background: var(--gray-1) !important;
-    }
 
     .stream-detail-page {
         padding: 0 10px;

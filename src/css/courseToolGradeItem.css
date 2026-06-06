@@ -14,7 +14,7 @@ body,
 html,
 .container {
     border: none;
-    background: var(--c-card) !important;
+    background: transparent !important;
 }
 
 /* 标题栏 */
@@ -33,6 +33,10 @@ html,
     border-bottom: none;
     padding-bottom: 0;
     margin-bottom: 10px;
+}
+
+#streamDetail {
+    border-top: none;
 }
 
 /* 反馈页面 */
