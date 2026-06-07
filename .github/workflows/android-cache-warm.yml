@@ -77,9 +77,54 @@ jobs:
       - name: Generate Tauri app icons
         run: npx --no-install tauri icon app-icon.png
 
+      - name: Setup Android signing
+        shell: bash
+        env:
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_BASE64: ${{ secrets.ANDROID_KEY_BASE64 }}
+        run: |
+          printf 'keyAlias=%s\n' "$ANDROID_KEY_ALIAS" > src-tauri/gen/android/keystore.properties
+          printf 'password=%s\n' "$ANDROID_KEY_PASSWORD" >> src-tauri/gen/android/keystore.properties
+          echo "$ANDROID_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/upload-keystore.jks"
+          printf 'storeFile=%s\n' "$RUNNER_TEMP/upload-keystore.jks" >> src-tauri/gen/android/keystore.properties
+
+      - name: Patch generated Android signing config
+        run: node .github/scripts/patch-android-signing.mjs
+
       - name: Build Android APK for cache warm
         shell: bash
         env:
           NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/${{ env.NDK_VERSION }}
           ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/${{ env.NDK_VERSION }}
         run: npx --no-install tauri android build --apk --target aarch64 --ci
+
+      - name: Collect warm build artifact
+        id: collect_artifact
+        shell: bash
+        run: |
+          mkdir -p artifact/android
+          shopt -s nullglob
+          apk_count=0
+
+          for apk in src-tauri/gen/android/app/build/outputs/apk/*/release/*.apk; do
+            case "$apk" in
+              *-unsigned.apk|*.apk.idsig) continue ;;
+            esac
+            cp "$apk" "artifact/android/$(basename "$apk")"
+            apk_count=$((apk_count + 1))
+          done
+
+          if [ "$apk_count" -eq 0 ]; then
+            echo "No APKs were found in src-tauri/gen/android/app/build/outputs/apk." >&2
+            exit 1
+          fi
+
+          echo "artifact_dir=artifact/android" >> "$GITHUB_OUTPUT"
+
+      - name: Upload warm build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-cache-warm-${{ github.run_number }}
+          path: ${{ steps.collect_artifact.outputs.artifact_dir }}
+          if-no-files-found: error
