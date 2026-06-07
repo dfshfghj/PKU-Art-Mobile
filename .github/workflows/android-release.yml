@@ -46,7 +46,10 @@ jobs:
           cache: npm
 
       - name: Install JavaScript dependencies
-        run: npm install --include=optional
+        shell: bash
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install --include=optional
 
       - name: Build Tauri mobile frontend assets
         run: npm run build:tauri-mobile
