@@ -5,7 +5,11 @@ import fs from 'fs';
 import dotenv from 'dotenv';
 import AutoImport from 'unplugin-auto-import/vite';
 
-const envConfig = dotenv.parse(fs.readFileSync('.env'));
+const envFilePath = '.env';
+const envConfig = fs.existsSync(envFilePath)
+    ? dotenv.parse(fs.readFileSync(envFilePath))
+    : {};
+const userscriptVersion = envConfig.VERSION ?? process.env.npm_package_version ?? '0.0.0';
 
 const date = new Date().toLocaleDateString('zh-CN', {
     year: 'numeric',
@@ -33,7 +37,7 @@ export default defineConfig({
                 // match: ['*://*.pku.edu.cn/*', 'http://localhost:8000/*'],
                 'run-at': 'document-start',
                 'inject-into': 'page',
-                version: envConfig.VERSION,
+                version: userscriptVersion,
                 connect: ['pku.edu.cn'],
                 license: 'GPL-3.0 license',
                 author: 'Arthals',
