@@ -102,3 +102,16 @@
     background: var(--c-hover);
     color: var(--c-primary);
 }
+
+@media (max-width: 736px) {
+    .stepcontent ol li div.label {
+        padding-bottom: 0;
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+
+    #containerdiv > .stepcontent {
+        background: transparent;
+    }
+}
+

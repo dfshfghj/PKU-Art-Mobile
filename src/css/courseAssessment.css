@@ -1,0 +1,108 @@
+.steptitle,
+body div[id*="step"],
+body div[id*="Step"],
+#dataCollectionContainer,
+.container,
+.submitStepBottom,
+.infoListWrapper {
+    background-color: var(--c-card) !important;
+}
+
+div[id*="step"],
+.stepcontent ol li div.label {
+    border: none;
+}
+
+* {
+    color: var(--c-text);
+    box-shadow: none !important;
+    border-color: var(--c-border) !important;
+}
+
+h3.steptitle {
+    color: var(--c-title);
+}
+
+.key-valueTable tbody td, .key-valueTable tbody th {
+    border: none !important;
+}
+
+.nav .sub ul, .nav.gb_currView .sub>ul, .menumini ul, .quickAddPal, .keyboardAccess, span.currentTags, .liveArea, .liveArea-slim, .previewArea, .jumptopage, .panelTabs li.active a.edit, .panelTabs li.active a.edit:hover, .panelTabs li.active a.edit:focus, .flyout, .bcContent .flyout, ul.tree li a+img+a:focus, ul.tree li img+img+a:focus, div.treeContainer ul.tree li a.itemActive, #learningUnitToc ul.tree li a.itemActive, ul.tree li a.itemActive, #loginLang ul,
+.qIncomplete {
+    background: var(--c-card);
+}
+
+.genericButton, .genericButtonImg, input[type="submit"].genericButton, .browse, .browseIcon, .rumble h3+ul>li>a, .rumble h3+ul>li>a, .rumble_top h3+ul>li>a, .rumble_top h3+ul>li>a, .paging a, .itemHeaderControl>a, .actionMenuButton, .button-3, .button-3-img, .button-4, .button-4-img, #toolsSearchBox+.button-4, .treeContainer .tree li a.button-4-img, .rumble a, .rumble_top a, .rumble .abutton, .rumble_top .abutton {
+    box-shadow: none;
+    background: var(--c-card);
+    color: var(--c-title);
+}
+
+.stepTitleRight.liveArea {
+    border: none;
+}
+
+.genericButton, .genericButton:hover, .genericButton:focus,
+.answerSavedButton, .answerSavedButton:hover, .answerSavedButton:focus {
+    border: 1px solid var(--c-border);
+}
+
+.genericButton:hover, .genericButton:focus,
+.answerSavedButton:hover, .answerSavedButton:focus {
+    background: var(--c-hover);
+}
+
+.assessmentPortlet {
+    position: sticky;
+    top: calc(60px + var(--safe-area-inset-top, 0px)) !important;
+}
+
+.assessmentPortlet .completionContainer .qComplete {
+    background-color: var(--cyan-4);
+    color: var(--gray-1);
+    border-radius: 2px;
+}
+
+.assessmentPortlet .completionContainer .qIncomplete {
+    color: var(--c-title);
+}
+
+.assessmentPortlet .completionContainer .abutton > span > img {
+    display: none;
+}
+
+#bb-take-assessment #dataCollectionContainer {
+    position: static !important;
+    margin-bottom: 120px;
+}
+
+.submitStepBottom {
+    bottom: calc(60px + var(--safe-area-inset-bottom, 0px));
+}
+
+.taskbuttonhelp {
+    font-family: normal;
+    font-style: normal;
+}
+
+input.submit.button-1,
+input.submit.button-1:hover {
+    background: var(--gray-8);
+    color: var(--gray-1);
+}
+
+input#bottom_saveAllAnswersButton.button-2 {
+    background: var(--c-card);
+    color: var(--c-title);
+}
+
+.liItem:hover, .buildList>li:hover {
+    background: transparent;
+}
+
+.backLink > a {
+    background: var(--gray-8);
+    color: var(--gray-1);
+    border-radius: 4px;
+    padding: 4px 18px 4px 12px;
+}

@@ -36,6 +36,7 @@ import courseToolCalendarStyles from './css/courseToolCalendar.css?inline';
 import courseOralTrainingStyles from './css/courseOralTraining.css?inline';
 import courseViewGroupStyles from './css/courseViewGroup.css?inline';
 import courseSettingStyles from './css/courseSetting.css?inline';
+import courseAssessmentStyles from './css/courseAssessment.css?inline';
 import electiveSsoLoginStyles from './css/electiveSsoLogin.css?inline';
 import electiveMainStyles from './css/electiveMain.css?inline';
 import electivePlanStyles from './css/electivePlan.css?inline';
@@ -288,6 +289,12 @@ const styleRules = [
         excludePatterns: [],
         styleContent: [courseSettingStyles, courseHeaderStyles, courseFooterStyles, courseGlobalPageStyles],
         fileName: 'courseSetting.css',
+    },
+    {
+        patterns: [/^https:\/\/course\.pku\.edu\.cn\/webapps\/assessment\/\S*/],
+        excludePatterns: [],
+        styleContent: courseAssessmentStyles,
+        fileName: 'courseAssessment.css',
     },
     // 选课网，已完成，待选课时进行验证
     {
