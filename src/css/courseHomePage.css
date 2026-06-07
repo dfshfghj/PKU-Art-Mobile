@@ -332,3 +332,7 @@ div.edit_controls > a:hover::before {
         flex-direction: column;
     }
 }
+
+ul > li > a:not(.pku-art-course-serial-cleaned) {
+    display: none !important;
+}

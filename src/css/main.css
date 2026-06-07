@@ -131,6 +131,15 @@
     :root.pku-art-dark {
         --c-border: transparent;
     }
+
+    * {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    *::-webkit-scrollbar {
+        display: none;
+    }
 }
 
 body,

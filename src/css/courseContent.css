@@ -128,6 +128,11 @@ body > div.cmdiv {
 }
 
 @media (max-width: 768px) {
+    #breadcrumbs:not(.pku-art-mobile-course-header-ready),
+    #pageTitleDiv:not(.pku-art-mobile-course-header-ready) {
+        display: none;
+    }
+
     body > div.cmdiv {
         position: fixed;
     }

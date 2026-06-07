@@ -336,101 +336,155 @@ function initializeCustomSelects() {
 
 function removeCourseSerialNumbers() {
     const url = window.location.href;
+    const doneClassName = 'pku-art-course-serial-cleaned';
 
     const isPortalPage =
         /^https:\/\/course\.pku\.edu\.cn\/webapps\/?$|^https:\/\/course\.pku\.edu\.cn\/webapps\/portal\/\S*$/.test(url);
     const isAlertsStreamPage =
         /^https:\/\/course\.pku\.edu\.cn\/webapps\/streamViewer\/streamViewer\S*streamName=alerts\S*$/.test(url);
 
-    if (isPortalPage) {
-        const stripPortalSerials = () => {
-            const courseLinks = document.querySelectorAll(
-                '.containerPortal > div:not(:first-child) .portlet .portletList-img > li > a'
-            );
-            courseLinks.forEach((courseLink) => {
-                courseLink.innerHTML = courseLink.innerHTML
-                    .replace(/^.*?: /, '')
-                    .replace(/\(\d+-\d+学年第\d学期.*?\)/, '');
+    const observeSerialCleanup = ({ selector, rewrite }) => {
+        let hasSeenTarget = false;
+        let observer = null;
+        let syncScheduled = false;
+        const startedAt = Date.now();
+        const maxWaitMs = 5000;
+
+        const processTargets = () => {
+            const targets = document.querySelectorAll(selector);
+            if (targets.length > 0) {
+                hasSeenTarget = true;
+            }
+
+            targets.forEach((target) => {
+                if (target.classList.contains(doneClassName)) {
+                    return;
+                }
+
+                rewrite(target);
+                target.classList.add(doneClassName);
             });
-            console.log('[PKU Art] course serial deleted: ' + courseLinks.length + ' courses');
+
+            return targets.length;
         };
 
-        stripPortalSerials();
-        document.addEventListener('DOMContentLoaded', stripPortalSerials);
-    }
+        const shouldDisconnect = () => {
+            if (document.readyState === 'loading') {
+                return false;
+            }
 
-    if (isAlertsStreamPage) {
-        let alertCleanupTimer;
-        const stripAlertSerials = () => {
-            const courseLinks = document.querySelectorAll('#streamHeader_alerts a');
-            courseLinks.forEach((courseLink) => {
-                courseLink.innerHTML = courseLink.innerHTML.replace(/\(\d+-\d+学年第\d学期.*?\)/, '');
-            });
-            if (courseLinks.length !== 0 && alertCleanupTimer) {
-                clearInterval(alertCleanupTimer);
+            const remainingTargets = document.querySelectorAll(`${selector}:not(.${doneClassName})`);
+            if (remainingTargets.length > 0) {
+                return false;
+            }
+
+            if (hasSeenTarget) {
+                return true;
+            }
+
+            return Date.now() - startedAt >= maxWaitMs;
+        };
+
+        const syncTargets = () => {
+            syncScheduled = false;
+            processTargets();
+            if (observer && shouldDisconnect()) {
+                observer.disconnect();
+                observer = null;
             }
         };
 
-        stripAlertSerials();
-        alertCleanupTimer = setInterval(() => {
-            const courseLinks = document.querySelectorAll('#streamHeader_alerts a');
-            if (courseLinks.length !== 0) {
-                stripAlertSerials();
+        const scheduleSyncTargets = () => {
+            if (syncScheduled) {
+                return;
             }
-        }, 50);
-    }
 
-    let alertCleanupTimer;
-    const stripAlertSerials = () => {
-        const courseLinks = document.querySelectorAll('#streamDetailHeaderRightClickable a , .stream_area_name, .coursePath a , a#courseMenu_link, .announcementInfo p');
-        courseLinks.forEach((courseLink) => {
-            courseLink.innerHTML = courseLink.innerHTML.replace(/\(\d+-\d+学年第\d学期.*?\)/, '');
+            syncScheduled = true;
+            requestAnimationFrame(syncTargets);
+        };
+
+        syncTargets();
+
+        if (shouldDisconnect()) {
+            return;
+        }
+
+        observer = new MutationObserver(() => {
+            scheduleSyncTargets();
         });
-        if (courseLinks.length !== 0 && alertCleanupTimer) {
-            clearInterval(alertCleanupTimer);
+
+        if (document.body) {
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true,
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', syncTargets, { once: true });
         }
     };
 
-    stripAlertSerials();
-    alertCleanupTimer = setInterval(() => {
-        const courseLinks = document.querySelectorAll('#streamDetailHeaderRightClickable a , .stream_area_name, .coursePath a , a#courseMenu_link, .announcementInfo p');
-        if (courseLinks.length !== 0) {
-            stripAlertSerials();
-        }
-    }, 50);
+    if (isPortalPage) {
+        observeSerialCleanup({
+            selector: '.containerPortal > div:not(:first-child) .portlet .portletList-img > li > a',
+            rewrite: (courseLink) => {
+                courseLink.innerHTML = courseLink.innerHTML
+                    .replace(/^.*?: /, '')
+                    .replace(/\(\d+-\d+学年第\d学期.*?\)/, '');
+            },
+        });
+    }
+
+    if (isAlertsStreamPage) {
+        observeSerialCleanup({
+            selector: '#streamHeader_alerts a',
+            rewrite: (courseLink) => {
+                courseLink.innerHTML = courseLink.innerHTML.replace(/\(\d+-\d+学年第\d学期.*?\)/, '');
+            },
+        });
+    }
+
+    observeSerialCleanup({
+        selector: '#streamDetailHeaderRightClickable a, .stream_area_name, .coursePath a, a#courseMenu_link, .announcementInfo p',
+        rewrite: (courseLink) => {
+            courseLink.innerHTML = courseLink.innerHTML.replace(/\(\d+-\d+学年第\d学期.*?\)/, '');
+        },
+    });
 
     const removeContextMenuSerials = () => {
-        const contextMenuOpenLink = document.querySelector("#breadcrumbs .coursePath .courseArrow a")
-        const doRemoveContextMenuSerials = () => {
-            contextMenuOpenLink.removeEventListener('mouseover', doRemoveContextMenuSerials)
-            contextMenuOpenLink.removeEventListener('click', doRemoveContextMenuSerials)
-            const waitForContextMenuReadyInterval = setInterval(() => {
-                console.log("[PKU Art] Waiting for context menu ready...")
-                if (contextMenuOpenLink.savedDiv.querySelector('li[id^="最近访问"]')) {
-                    clearInterval(waitForContextMenuReadyInterval)
-                    contextMenuOpenLink.savedDiv.innerHTML = contextMenuOpenLink.savedDiv.innerHTML.replace(/\(\d+-\d+学年第\d学期\)/g, '')
-                    const emptyMenu = contextMenuOpenLink.savedDiv.querySelector('ul[role="presentation"]:has(.contextmenu_empty)')
-                    if (emptyMenu) {
-                        contextMenuOpenLink.savedDiv.removeChild(emptyMenu)
-                        console.log("[PKU Art] Removed empty context menu")
-                    } 
-                }
-            }, 100)
-        }
-        if (contextMenuOpenLink) {
-            contextMenuOpenLink.addEventListener('mouseover', doRemoveContextMenuSerials)
-            // if somehow the user clicks before mouseover :(
-            contextMenuOpenLink.addEventListener('click', doRemoveContextMenuSerials)
-            contextMenuOpenLink.addEventListener('click', registerCloseContextMenuOnPage)
-        }
-    }
+        const contextMenuOpenLink = document.querySelector("#breadcrumbs .coursePath .courseArrow a");
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', removeContextMenuSerials);
-    }
-    else { 
-        removeContextMenuSerials();
-    }
+        const doRemoveContextMenuSerials = () => {
+            contextMenuOpenLink.removeEventListener('mouseover', doRemoveContextMenuSerials);
+            contextMenuOpenLink.removeEventListener('click', doRemoveContextMenuSerials);
+            const waitForContextMenuReadyInterval = setInterval(() => {
+                if (contextMenuOpenLink.savedDiv?.querySelector('li[id^="最近访问"]')) {
+                    clearInterval(waitForContextMenuReadyInterval);
+                    contextMenuOpenLink.savedDiv.innerHTML = contextMenuOpenLink.savedDiv.innerHTML.replace(/\(\d+-\d+学年第\d学期\)/g, '');
+                    const emptyMenu = contextMenuOpenLink.savedDiv.querySelector('ul[role="presentation"]:has(.contextmenu_empty)');
+                    if (emptyMenu) {
+                        contextMenuOpenLink.savedDiv.removeChild(emptyMenu);
+                    }
+                }
+            }, 100);
+        };
+
+        contextMenuOpenLink.dataset.pkuArtContextMenuBound = 'true';
+        contextMenuOpenLink.addEventListener('mouseover', doRemoveContextMenuSerials);
+        contextMenuOpenLink.addEventListener('click', doRemoveContextMenuSerials);
+        contextMenuOpenLink.addEventListener('click', registerCloseContextMenuOnPage);
+    };
+
+    const contextMenuObserver = new MutationObserver(() => {
+        if (document.querySelector("#breadcrumbs .coursePath .courseArrow a")) {
+            removeContextMenuSerials();
+            contextMenuObserver.disconnect();
+        }
+        
+    });
+
+    contextMenuObserver.observe(document, { childList: true });
 }
 
 async function initializeDirectDownload() {
@@ -1534,6 +1588,7 @@ function initializeMobileCourseHeaderLayout() {
 
     const mediaQuery = window.matchMedia('(max-width: 768px)');
     const bodyClassName = 'pku-art-mobile-course-header-active';
+    const readyClassName = 'pku-art-mobile-course-header-ready';
     const hiddenClassName = 'pku-art-page-title-detached';
     const state = {
         records: null,
@@ -1549,6 +1604,12 @@ function initializeMobileCourseHeaderLayout() {
         const referenceNode =
             record.nextSibling && record.nextSibling.parentNode === record.parent ? record.nextSibling : null;
         record.parent.insertBefore(record.node, referenceNode);
+    };
+
+    const setReadyState = (enabled) => {
+        state.records?.breadcrumbs?.node?.classList.toggle(readyClassName, enabled);
+        const pageTitleDiv = document.querySelector('#pageTitleDiv');
+        pageTitleDiv?.classList.toggle(readyClassName, enabled);
     };
 
     const ensureHeaderRecords = () => {
@@ -1617,6 +1678,7 @@ function initializeMobileCourseHeaderLayout() {
             records.pageTitleHeader.node.parentNode === headerHost
         ) {
             document.body.classList.add(bodyClassName);
+            setReadyState(true);
             const pageTitleDiv = document.querySelector('#pageTitleDiv');
             if (pageTitleDiv) {
                 pageTitleDiv.classList.add(hiddenClassName);
@@ -1626,6 +1688,7 @@ function initializeMobileCourseHeaderLayout() {
 
         headerHost.append(records.breadcrumbs.node, records.pageTitleHeader.node);
         document.body.classList.add(bodyClassName);
+        setReadyState(true);
 
         const pageTitleDiv = document.querySelector('#pageTitleDiv');
         if (pageTitleDiv) {
@@ -1645,6 +1708,7 @@ function initializeMobileCourseHeaderLayout() {
             state.records.pageTitleHeader.node.parentNode === state.records.pageTitleHeader.parent
         ) {
             document.body.classList.remove(bodyClassName);
+            setReadyState(false);
             const pageTitleDiv = document.querySelector('#pageTitleDiv');
             if (pageTitleDiv) {
                 pageTitleDiv.classList.remove(hiddenClassName);
@@ -1655,6 +1719,7 @@ function initializeMobileCourseHeaderLayout() {
         restoreNode(state.records.breadcrumbs);
         restoreNode(state.records.pageTitleHeader);
         document.body.classList.remove(bodyClassName);
+        setReadyState(false);
 
         const pageTitleDiv = document.querySelector('#pageTitleDiv');
         if (pageTitleDiv) {
