@@ -60,10 +60,19 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - name: Setup Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            src-tauri -> target
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -77,12 +86,11 @@ jobs:
             "build-tools;36.0.0" \
             "ndk;${NDK_VERSION}"
 
-      - name: Install Tauri CLI
-        shell: bash
-        run: cargo install tauri-cli --version "^2.10.0" --locked
-
       - name: Initialize Android project
-        run: cargo tauri android init --ci
+        run: npx --no-install tauri android init --ci
+
+      - name: Generate Tauri app icons
+        run: npx --no-install tauri icon app-icon.png
 
       - name: Setup Android signing
         shell: bash
@@ -104,7 +112,7 @@ jobs:
         env:
           NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/${{ env.NDK_VERSION }}
           ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/${{ env.NDK_VERSION }}
-        run: cargo tauri android build --apk --split-per-abi --ci
+        run: npx --no-install tauri android build --apk --split-per-abi --ci
 
       - name: Collect release assets
         id: collect_assets
