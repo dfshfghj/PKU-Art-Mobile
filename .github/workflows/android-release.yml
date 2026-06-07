@@ -45,6 +45,12 @@ jobs:
           node-version: 20
           cache: npm
 
+      - name: Install JavaScript dependencies
+        run: npm install --include=optional
+
+      - name: Build Tauri mobile frontend assets
+        run: npm run build:tauri-mobile
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -71,12 +77,6 @@ jobs:
       - name: Install Tauri CLI
         shell: bash
         run: cargo install tauri-cli --version "^2.10.0" --locked
-
-      - name: Install JavaScript dependencies
-        run: npm ci
-
-      - name: Build Tauri mobile frontend assets
-        run: npm run build:tauri-mobile
 
       - name: Initialize Android project
         run: cargo tauri android init --ci
