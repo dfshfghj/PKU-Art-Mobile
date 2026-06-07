@@ -60,6 +60,10 @@ html,
 }
 
 @media (max-width: 480px) {
+    #filterby a {
+        padding: 4px;
+    }
+
     .gradeTableNew {
         margin-top: 0;
     }

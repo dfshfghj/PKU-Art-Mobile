@@ -29,6 +29,7 @@ import {
     removeBootstrap,
     persistUserInfo,
     autoLogin,
+    moveGradesStreamContentToLearnBody,
     insertGradesHeader,
     initializeSettingButton,
     initializeSettingPage,
@@ -82,6 +83,7 @@ convertBlankLinksToTop();
 setViewportMeta();
 persistUserInfo();
 autoLogin();
+moveGradesStreamContentToLearnBody();
 insertGradesHeader();
 initializeSettingButton();
 initializeSettingPage();

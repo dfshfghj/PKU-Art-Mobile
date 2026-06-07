@@ -1869,7 +1869,7 @@ function initializeBottomNavigationBar() {
             display: flex;
             justify-content: space-around;
             align-items: center;
-            z-index: 9999;
+            z-index: 1001;
             box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             padding-bottom: var(--safe-area-inset-bottom);
@@ -2278,6 +2278,65 @@ function insertNav() {
     observer.observe(document, { childList: true, subtree: true});
 }
 
+function moveGradesStreamContentToLearnBody() {
+    const streamMatch = window.location.href.match(/streamName=(mygrades(?:_d)?)/);
+    const streamName = streamMatch?.[1];
+    if (!streamName) {
+        return;
+    }
+
+    const mediaQuery = window.matchMedia('(max-width: 800px)');
+
+    const relocate = () => {
+        if (!mediaQuery.matches) {
+            return false;
+        }
+
+        const learnBody = document.querySelector('body#learn-oe-body');
+        const header = document.querySelector(`.stream_header#streamHeader_${streamName}`);
+        const streamFrame = document.querySelector('iframe.stream_page');
+        if (!(learnBody instanceof HTMLBodyElement) || !(header instanceof HTMLElement) || !(streamFrame instanceof HTMLIFrameElement)) {
+            return false;
+        }
+
+        if (header.parentElement !== learnBody) {
+            learnBody.appendChild(header);
+        }
+
+        if (streamFrame.parentElement !== learnBody) {
+            learnBody.appendChild(streamFrame);
+        }
+
+        return header.parentElement === learnBody && streamFrame.parentElement === learnBody;
+    };
+
+    if (relocate()) {
+        return;
+    }
+
+    const observer = new MutationObserver(() => {
+        if (relocate()) {
+            observer.disconnect();
+        }
+    });
+
+    observer.observe(document, { childList: true, subtree: true });
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            if (relocate()) {
+                observer.disconnect();
+            }
+        }, { once: true });
+    }
+
+    mediaQuery.addEventListener('change', () => {
+        if (relocate()) {
+            observer.disconnect();
+        }
+    });
+}
+
 function insertGradesHeader() {
     const getGradesStreamName = () => {
         const header = document.querySelector('ul.stream_list_filter[id^="filter_by_mygrades"]');
@@ -2649,6 +2708,7 @@ export {
     removeBootstrap,
     persistUserInfo,
     autoLogin,
+    moveGradesStreamContentToLearnBody,
     insertGradesHeader,
     initializeSettingPage
 };

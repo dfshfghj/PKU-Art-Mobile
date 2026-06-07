@@ -77,6 +77,10 @@
 }
 
 @media (max-width: 800px) {
+    div.locationPane {
+        padding-top: 80px !important;
+    }
+    
     .stream_pages {
         flex-direction: column;
     }
@@ -84,16 +88,23 @@
     #right_stream_mygrades,
     #right_stream_mygrades_d {
         position: fixed;
+        z-index: 1050;
         top: 200px;
         min-height: 0;
-        height: calc(100vh - 200px - 60px - var(--safe-area-inset-bottom, 0px)) !important;
+        height: calc(100vh - 200px - var(--safe-area-inset-bottom, 0px)) !important;
         transition: all 0.2s ease-in-out;
     }
 
-    .stream_header {
-        height: 80px !important;
+    #streamHeader_mygrades.stream_header.show_close_stream_button,
+    #streamHeader_mygrades_d.stream_header.show_close_stream_button {
+        position: fixed;
+        top: 0;
+        height: 100%;
+        width: 100%;
         display: flex;
         flex-direction: column;
+        background: rgba(0, 0, 0, 0.3);
+        z-index: 1002;
     }
 
     .stream_header > h1 {
@@ -207,7 +218,7 @@
     iframe#right_stream_mygrades_d.stream_right {
         width: 100% !important;
         flex-basis: auto;
-        background: var(--gray-1) !important;
+        background: var(--c-background) !important;
         border-radius: 8px;
     }
 
@@ -221,7 +232,8 @@
     }
 
     .stream_header:after {
-        background: var(--gray-1);
+        display: none;
+        background: var(--c-background);
         border: var(--c-border);
         z-index: 999;
         position: fixed;
@@ -241,12 +253,6 @@
 }
 
 @media (max-width: 768px) {
-    .stream_header {
-        height: auto !important;
-        gap: 10px;
-        padding-bottom: 12px !important;
-    }
-
     .stream_header > h1 {
         display: none;
     }
