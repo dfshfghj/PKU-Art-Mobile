@@ -33,3 +33,6 @@ example
 
 .env
 README copy.md
+*.jks
+*.keystore
+src-tauri/gen/android/keystore.properties
