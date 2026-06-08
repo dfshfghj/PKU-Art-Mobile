@@ -36,8 +36,8 @@ jobs:
           rm -rf node_modules package-lock.json
           npm install --include=optional
 
-      - name: Build Tauri mobile frontend assets
-        run: npm run build:tauri-mobile
+      - name: Build frontend inject assets
+        run: npm run build
 
       - name: Setup Java
         uses: actions/setup-java@v4
