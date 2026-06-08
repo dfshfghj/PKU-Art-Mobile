@@ -561,6 +561,13 @@ fn maybe_open_downloaded_file(
         return Ok(());
     }
 
+    #[cfg(mobile)]
+    {
+        let _ = app;
+        let _ = file_path;
+        return Ok(());
+    }
+
     app.opener()
         .open_path(file_path, None::<&str>)
         .map_err(|error| error.to_string())

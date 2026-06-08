@@ -20,6 +20,7 @@
 !/gen/android/app/src/main/java/com/pku/course/
 /gen/android/app/src/main/java/com/pku/course/*
 !/gen/android/app/src/main/java/com/pku/course/MainActivity.kt
+!/gen/android/app/src/main/java/com/pku/course/OpenDownloadedFilePlugin.kt
 !/gen/android/app/src/main/res/
 /gen/android/app/src/main/res/*
 !/gen/android/app/src/main/res/raw/
@@ -27,4 +28,5 @@
 !/gen/android/app/src/main/res/raw/globalsign_gcc_r6_alphassl_ca_2025.pem
 !/gen/android/app/src/main/res/xml/
 /gen/android/app/src/main/res/xml/*
+!/gen/android/app/src/main/res/xml/file_paths.xml
 !/gen/android/app/src/main/res/xml/network_security_config.xml

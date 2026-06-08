@@ -134,6 +134,33 @@ const DOWNLOAD_PATH_PATTERNS = [
   "/dist/",
 ];
 
+function isLaunchInNewContentFile(urlObj) {
+  return (
+    urlObj.pathname.toLowerCase() ===
+      "/webapps/blackboard/execute/content/file" &&
+    urlObj.searchParams.get("launch_in_new") === "true"
+  );
+}
+
+function extractBlackboardHtmlRedirectUrl(html, baseUrl) {
+  if (!html) {
+    return null;
+  }
+
+  const match = html.match(
+    /document\.location\s*=\s*['"]([^'"]*\/bbcswebdav\/[^'"]+)['"]/i,
+  );
+  if (!match?.[1]) {
+    return null;
+  }
+
+  try {
+    return new URL(match[1], baseUrl).href;
+  } catch (_error) {
+    return null;
+  }
+}
+
 // Language detection utilities
 function getUserLanguage() {
   return navigator.language || navigator.userLanguage;
@@ -181,6 +208,7 @@ function isDownloadableFile(url) {
       // Check for download hints
       urlObj.searchParams.has("download") ||
       urlObj.searchParams.has("attachment") ||
+      isLaunchInNewContentFile(urlObj) ||
       // Check for common download paths
       DOWNLOAD_PATH_PATTERNS.some((pattern) => pathname.includes(pattern))
     );
@@ -255,7 +283,18 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const shouldAutoOpenDownloadedFile = () => !!window.__TAURI__;
+  const isTauriRuntime = () => !!window.__TAURI__;
+  const isAndroidTauri = () => isTauriRuntime() && /android/i.test(navigator.userAgent);
+  const shouldAutoOpenDownloadedFile = () => isTauriRuntime() && !isAndroidTauri();
+
+  async function maybeOpenDownloadedFileOnAndroid(result) {
+    if (!isAndroidTauri() || !result?.path) {
+      return result;
+    }
+
+    await invoke("open_downloaded_file", { path: result.path });
+    return result;
+  }
 
   function downloadFromDataUri(dataURI, filename) {
     try {
@@ -280,7 +319,9 @@ document.addEventListener("DOMContentLoaded", () => {
           language: userLanguage,
           openAfterDownload: shouldAutoOpenDownloadedFile(),
         },
-      }).catch((error) => {
+      })
+        .then(maybeOpenDownloadedFileOnAndroid)
+        .catch((error) => {
         console.error("Failed to download data URI file:", filename, error);
         showDownloadError(filename);
       });
@@ -301,7 +342,9 @@ document.addEventListener("DOMContentLoaded", () => {
             language: userLanguage,
             openAfterDownload: shouldAutoOpenDownloadedFile(),
           },
-        }).catch((error) => {
+        })
+          .then(maybeOpenDownloadedFileOnAndroid)
+          .catch((error) => {
           console.error("Failed to download blob file:", filename, error);
           showDownloadError(filename);
         });
@@ -348,7 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ["blob", "data"].some((protocol) => url.startsWith(protocol));
 
   async function saveBinaryDownload(filename, buffer, language) {
-    await invoke("download_file_by_binary", {
+    const result = await invoke("download_file_by_binary", {
       params: {
         filename,
         binary: Array.from(new Uint8Array(buffer)),
@@ -356,9 +399,10 @@ document.addEventListener("DOMContentLoaded", () => {
         openAfterDownload: shouldAutoOpenDownloadedFile(),
       },
     });
+    await maybeOpenDownloadedFileOnAndroid(result);
   }
 
-  async function downloadViaFetch(url, filename, language) {
+async function downloadViaFetch(url, filename, language) {
     const response = await fetch(url, {
       credentials: "include",
     });
@@ -366,6 +410,30 @@ document.addEventListener("DOMContentLoaded", () => {
     const contentType = response.headers.get("content-type") || "";
     const contentDisposition =
       response.headers.get("content-disposition") || "";
+    const isHtmlResponse = /^text\/html\b/i.test(contentType);
+    const shouldInspectBlackboardShell = isHtmlResponse && (() => {
+      try {
+        return isLaunchInNewContentFile(new URL(response.url || url, window.location.href));
+      } catch (_error) {
+        return false;
+      }
+    })();
+
+    if (shouldInspectBlackboardShell) {
+      const html = await response.text();
+      const redirectUrl = extractBlackboardHtmlRedirectUrl(html, response.url || url);
+      console.debug("[PKU Art] Inspect Blackboard HTML redirect shell via fetch", {
+        requestUrl: url,
+        responseUrl: response.url,
+        redirectUrl,
+      });
+
+      if (redirectUrl) {
+        await downloadViaFetch(redirectUrl, filename, language);
+        return;
+      }
+    }
+
     const resolvedFilename = resolveDownloadFilenameFromResponse(
       filename,
       response.url,
@@ -392,7 +460,7 @@ document.addEventListener("DOMContentLoaded", () => {
     await saveBinaryDownload(resolvedFilename, buffer, language);
   }
 
-  function downloadViaXhr(url, filename, language) {
+function downloadViaXhr(url, filename, language) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open("GET", url, true);
@@ -404,6 +472,35 @@ document.addEventListener("DOMContentLoaded", () => {
           const contentType = xhr.getResponseHeader("content-type") || "";
           const contentDisposition =
             xhr.getResponseHeader("content-disposition") || "";
+          const isHtmlResponse = /^text\/html\b/i.test(contentType);
+          const shouldInspectBlackboardShell = isHtmlResponse && (() => {
+            try {
+              return isLaunchInNewContentFile(new URL(xhr.responseURL || url, window.location.href));
+            } catch (_error) {
+              return false;
+            }
+          })();
+
+          if (shouldInspectBlackboardShell) {
+            const decoder = new TextDecoder("iso-8859-1");
+            const html = decoder.decode(new Uint8Array(xhr.response));
+            const redirectUrl = extractBlackboardHtmlRedirectUrl(
+              html,
+              xhr.responseURL || url,
+            );
+            console.debug("[PKU Art] Inspect Blackboard HTML redirect shell via XHR", {
+              requestUrl: url,
+              responseUrl: xhr.responseURL,
+              redirectUrl,
+            });
+
+            if (redirectUrl) {
+              await downloadViaXhr(redirectUrl, filename, language);
+              resolve();
+              return;
+            }
+          }
+
           const resolvedFilename = resolveDownloadFilenameFromResponse(
             filename,
             xhr.responseURL,
@@ -474,7 +571,9 @@ document.addEventListener("DOMContentLoaded", () => {
         referer: window.location.href,
         openAfterDownload: shouldAutoOpenDownloadedFile(),
       },
-    }).catch((error) => {
+    })
+      .then(maybeOpenDownloadedFileOnAndroid)
+      .catch((error) => {
       console.error("[PKU Art] Native download failed", {
         url,
         filename,

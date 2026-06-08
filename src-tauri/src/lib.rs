@@ -1,3 +1,4 @@
+mod android_file_opener;
 mod app;
 mod util;
 
@@ -27,6 +28,7 @@ use util::get_pake_config;
 pub fn run_app() {
     let (pake_config, tauri_config) = get_pake_config();
     let tauri_app = tauri::Builder::default()
+        .plugin(android_file_opener::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(
             tauri_plugin_log::Builder::new()
@@ -104,6 +106,7 @@ pub fn run_app() {
     app_builder
         .manage(CourseNotificationState::default())
         .invoke_handler(tauri::generate_handler![
+            android_file_opener::open_downloaded_file,
             download_file,
             download_file_by_binary,
             send_notification,
