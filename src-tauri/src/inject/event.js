@@ -255,6 +255,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const shouldAutoOpenDownloadedFile = () => !!window.__TAURI__;
+
   function downloadFromDataUri(dataURI, filename) {
     try {
       const byteString = atob(dataURI.split(",")[1]);
@@ -276,6 +278,7 @@ document.addEventListener("DOMContentLoaded", () => {
           filename,
           binary: Array.from(binary),
           language: userLanguage,
+          openAfterDownload: shouldAutoOpenDownloadedFile(),
         },
       }).catch((error) => {
         console.error("Failed to download data URI file:", filename, error);
@@ -296,6 +299,7 @@ document.addEventListener("DOMContentLoaded", () => {
             filename,
             binary,
             language: userLanguage,
+            openAfterDownload: shouldAutoOpenDownloadedFile(),
           },
         }).catch((error) => {
           console.error("Failed to download blob file:", filename, error);
@@ -349,6 +353,7 @@ document.addEventListener("DOMContentLoaded", () => {
         filename,
         binary: Array.from(new Uint8Array(buffer)),
         language,
+        openAfterDownload: shouldAutoOpenDownloadedFile(),
       },
     });
   }
@@ -467,6 +472,7 @@ document.addEventListener("DOMContentLoaded", () => {
         language,
         cookie: document.cookie || null,
         referer: window.location.href,
+        openAfterDownload: shouldAutoOpenDownloadedFile(),
       },
     }).catch((error) => {
       console.error("[PKU Art] Native download failed", {

@@ -15,7 +15,10 @@ use std::time::Duration;
 #[cfg(desktop)]
 use app::setup::{set_global_shortcut, set_system_tray};
 use app::{
-    invoke::{download_file, download_file_by_binary, send_notification},
+    invoke::{
+        download_file, download_file_by_binary, fetch_unread_notifications, send_notification,
+        sync_course_credentials, CourseNotificationState,
+    },
     window::set_window,
 };
 use util::get_pake_config;
@@ -59,6 +62,7 @@ pub fn run_app() {
     let app_builder = tauri_app
         .plugin(tauri_plugin_oauth::init())
         .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_safe_area_insets_css::init());
@@ -68,6 +72,7 @@ pub fn run_app() {
     let mut app_builder = tauri_app
         .plugin(tauri_plugin_oauth::init())
         .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_notification::init());
 
@@ -97,10 +102,13 @@ pub fn run_app() {
     }
 
     app_builder
+        .manage(CourseNotificationState::default())
         .invoke_handler(tauri::generate_handler![
             download_file,
             download_file_by_binary,
             send_notification,
+            sync_course_credentials,
+            fetch_unread_notifications,
         ])
         .setup(move |app| {
             #[cfg(desktop)]

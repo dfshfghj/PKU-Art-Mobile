@@ -189,6 +189,7 @@
         filename,
         binary,
         language: "zh",
+        openAfterDownload: false,
       },
     });
 

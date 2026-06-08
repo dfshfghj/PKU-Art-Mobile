@@ -12,6 +12,8 @@
   },
   "permissions": [
     "shell:allow-open",
+    "opener:allow-default-urls",
+    "opener:allow-open-path",
     "core:window:allow-theme",
     "core:window:allow-start-dragging",
     "core:window:allow-toggle-maximize",

@@ -1,5 +1,7 @@
 import { downloadIcon, linkIcon, sparkIcon, refreshIcon, closeIcon, homeIcon, gradeIcon, notificationIcon, announcementIcon, menuIcon } from './icon.js';
 import '@saurl/tauri-plugin-safe-area-insets-css-api';
+import { invoke } from '@tauri-apps/api/core';
+import { openUrl as openExternalUrl } from '@tauri-apps/plugin-opener';
 import { Store } from '@tauri-apps/plugin-store';
 import { fetch as fetch_rs } from '@tauri-apps/plugin-http';
 import { saveLogs, clearLogs } from './logger.js';
@@ -15,6 +17,20 @@ async function getStore() {
 if (import.meta.env.MODE == 'tauri') {
     window.fetch_rs = fetch_rs;
     window.Store = Store;
+}
+
+async function syncCourseCredentialsToBackend(userName, password) {
+    if (import.meta.env.MODE !== 'tauri' || !userName || !password) {
+        return;
+    }
+
+    try {
+        await invoke('sync_course_credentials', {
+            params: { userName, password },
+        });
+    } catch (error) {
+        console.warn('[PKU Art] Failed to sync course credentials to backend', error);
+    }
 }
 // Other utilities
 function initializeLogoNavigation() {
@@ -943,6 +959,26 @@ function enableDirectOpenLinks() {
         return;
     }
 
+    const isTauriRuntime = import.meta.env.MODE == 'tauri';
+
+    const isExternalHttpUrl = (href) => {
+        if (!href || href.startsWith('#')) {
+            return false;
+        }
+
+        try {
+            const resolvedUrl = new URL(href, window.location.href);
+            console.log(resolvedUrl);
+            if (!/^https?:$/.test(resolvedUrl.protocol)) {
+                return false;
+            }
+
+            return !/(^|\.)pku\.edu\.cn$/i.test(resolvedUrl.hostname);
+        } catch (_error) {
+            return false;
+        }
+    };
+
     const stripOnclickHandlers = () => {
         const links = document.querySelectorAll('a[onclick][href]');
 
@@ -951,7 +987,7 @@ function enableDirectOpenLinks() {
 
             const href = link.getAttribute('href');
             // 只打开外链，不打开内链
-            if (href && !href.startsWith('/') && !href.startsWith('#')) {
+            if (isExternalHttpUrl(href)) {
                 link.removeAttribute('onclick');
                 console.log('[PKU Art] 直接打开链接:', href);
             }
@@ -985,6 +1021,35 @@ function enableDirectOpenLinks() {
     }
 
     document.addEventListener('DOMContentLoaded', stripOnclickHandlers);
+
+    if (!isTauriRuntime) {
+        return;
+    }
+
+    document.addEventListener(
+        'click',
+        (event) => {
+            const link = event.target instanceof Element ? event.target.closest('a[href]') : null;
+            if (!(link instanceof HTMLAnchorElement)) {
+                return;
+            }
+
+            const href = link.getAttribute('href');
+            if (!isExternalHttpUrl(href)) {
+                return;
+            }
+
+            const externalUrl = new URL(href, window.location.href).toString();
+            event.preventDefault();
+            event.stopPropagation();
+            link.removeAttribute('onclick');
+            console.log('[PKU Art] 通过系统浏览器打开外链:', externalUrl);
+            openExternalUrl(externalUrl).catch((error) => {
+                console.error('[PKU Art] 使用系统浏览器打开外链失败:', externalUrl, error);
+            });
+        },
+        true
+    );
 }
 
 function restoreCourseQueryValues() {
@@ -2021,6 +2086,7 @@ async function persistUserInfo() {
                         console.log(this.responseText);
                         const response = JSON.parse(this.responseText);
                         if (response.success === true) {
+                            syncCourseCredentialsToBackend(userName, password);
                             const timestamp = Date.now();
                             document.cookie = `course_login=true; domain=.pku.edu.cn; path=/`;
                             document.cookie = `course_last_login=${timestamp}; domain=.pku.edu.cn; path=/`;
@@ -2068,6 +2134,7 @@ async function autoLogin() {
     if (user) {
         const userName = user.userName;
         const password = user.password;
+        await syncCourseCredentialsToBackend(userName, password);
         console.debug('autoLogin', userName, password);
 
         const res = await fetch_rs('https://iaaa.pku.edu.cn/iaaa/oauthlogin.do', {
@@ -2121,6 +2188,7 @@ async function portalLogin() {
     if (user) {
         const userName = user.userName;
         const password = user.password;
+        await syncCourseCredentialsToBackend(userName, password);
         console.debug('portalLogin', userName, password);
 
         const res = await fetch_rs('https://iaaa.pku.edu.cn/iaaa/oauthlogin.do', {

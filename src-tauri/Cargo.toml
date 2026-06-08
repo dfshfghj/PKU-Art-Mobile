@@ -29,6 +29,7 @@ tauri-plugin-global-shortcut = { version = "2.3.0" }
 tauri-plugin-shell = "2.3.1"
 tauri-plugin-single-instance = "2.3.4"
 tauri-plugin-notification = "2.3.3"
+tauri-plugin-opener = "2.4.0"
 tauri-plugin-safe-area-insets-css = "0.1.0"
 tauri-plugin-store = "2.4.1"
 tauri-plugin-log = "2.8.0"
