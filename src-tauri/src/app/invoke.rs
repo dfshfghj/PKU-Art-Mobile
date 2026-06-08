@@ -61,6 +61,7 @@ struct CourseCredentials {
 #[derive(Default)]
 pub struct CourseNotificationState {
     credentials: Mutex<Option<CourseCredentials>>,
+    client: Mutex<Option<Client>>,
     last_unread_ids: Mutex<HashSet<String>>,
     polling_started: Mutex<bool>,
 }
@@ -145,6 +146,11 @@ const IAAA_BLACKBOARD_LOGIN_URL: &str = "https://iaaa.pku.edu.cn/iaaa/oauthlogin
 const ALERTS_STREAM_URL: &str = "https://course.pku.edu.cn/webapps/streamViewer/streamViewer";
 const ALERTS_POLL_INTERVAL: Duration = Duration::from_secs(180);
 
+enum AlertsFetchError {
+    AuthExpired(String),
+    Other(String),
+}
+
 fn should_add_pku_intermediate(url: &Url) -> bool {
     url.host_str()
         .map(|host| host == "pku.edu.cn" || host.ends_with(".pku.edu.cn"))
@@ -192,6 +198,21 @@ fn build_blackboard_client() -> Result<Client, String> {
     }
 
     builder.build().map_err(|error| error.to_string())
+}
+
+fn get_or_create_blackboard_client(state: &CourseNotificationState) -> Result<Client, String> {
+    let mut guard = state
+        .client
+        .lock()
+        .map_err(|error| format!("notification client lock poisoned: {error}"))?;
+
+    if let Some(client) = guard.as_ref() {
+        return Ok(client.clone());
+    }
+
+    let client = build_blackboard_client()?;
+    *guard = Some(client.clone());
+    Ok(client)
 }
 
 async fn login_blackboard(client: &Client, credentials: &CourseCredentials) -> Result<(), String> {
@@ -282,12 +303,7 @@ fn extract_unread_notifications(payload: StreamViewerResponse) -> UnreadNotifica
     }
 }
 
-async fn fetch_unread_notifications_with_credentials(
-    credentials: &CourseCredentials,
-) -> Result<UnreadNotificationsResponse, String> {
-    let client = build_blackboard_client()?;
-    login_blackboard(&client, credentials).await?;
-
+async fn request_alerts_payload(client: &Client) -> Result<String, AlertsFetchError> {
     let response = client
         .post(ALERTS_STREAM_URL)
         .header(ACCEPT, "text/javascript, text/html, application/xml, text/xml, */*")
@@ -302,12 +318,60 @@ async fn fetch_unread_notifications_with_credentials(
         .body("cmd=loadStream&streamName=alerts&providers=%7B%7D&forOverview=false")
         .send()
         .await
-        .map_err(|error| format!("alerts request failed: {error}"))?;
+        .map_err(|error| AlertsFetchError::Other(format!("alerts request failed: {error}")))?;
+
+    let final_url = response.url().to_string();
+    let content_type = response
+        .headers()
+        .get(CONTENT_TYPE)
+        .and_then(|value| value.to_str().ok())
+        .unwrap_or_default()
+        .to_ascii_lowercase();
 
     let payload_text = response
         .text()
         .await
-        .map_err(|error| format!("alerts response read failed: {error}"))?;
+        .map_err(|error| AlertsFetchError::Other(format!("alerts response read failed: {error}")))?;
+
+    let trimmed = payload_text.trim_start();
+    let looks_like_login_page = final_url.contains("/webapps/login")
+        || final_url.contains("/iaaa/")
+        || (content_type.contains("text/html")
+            && (trimmed.starts_with("<!DOCTYPE html")
+                || trimmed.starts_with("<html")
+                || payload_text.contains("bb-sso-BBLEARN")
+                || payload_text.contains("校园卡用户")
+                || payload_text.contains("统一身份认证")));
+
+    if looks_like_login_page {
+        return Err(AlertsFetchError::AuthExpired(format!(
+            "course session expired; redirected to {final_url}"
+        )));
+    }
+
+    Ok(payload_text)
+}
+
+async fn fetch_unread_notifications_with_credentials(
+    state: &CourseNotificationState,
+    credentials: &CourseCredentials,
+) -> Result<UnreadNotificationsResponse, String> {
+    let client = get_or_create_blackboard_client(state)?;
+
+    let payload_text = match request_alerts_payload(&client).await {
+        Ok(payload_text) => payload_text,
+        Err(AlertsFetchError::AuthExpired(_)) => {
+            login_blackboard(&client, credentials).await?;
+            request_alerts_payload(&client)
+                .await
+                .map_err(|error| match error {
+                    AlertsFetchError::AuthExpired(message) => message,
+                    AlertsFetchError::Other(message) => message,
+                })?
+        }
+        Err(AlertsFetchError::Other(message)) => return Err(message),
+    };
+
     let payload: StreamViewerResponse = serde_json::from_str(&payload_text)
         .map_err(|error| format!("alerts response parse failed: {error}"))?;
 
@@ -330,7 +394,7 @@ async fn poll_course_notifications_once(
         return Ok(());
     };
 
-    let unread = fetch_unread_notifications_with_credentials(&credentials).await?;
+    let unread = fetch_unread_notifications_with_credentials(state, &credentials).await?;
     let current_ids: HashSet<String> = unread.items.iter().map(|item| item.id.clone()).collect();
 
     let newly_unread = {
@@ -632,6 +696,20 @@ pub async fn sync_course_credentials(
             password: params.password,
         });
     }
+    {
+        let mut guard = state
+            .client
+            .lock()
+            .map_err(|error| format!("notification client lock poisoned: {error}"))?;
+        *guard = Some(build_blackboard_client()?);
+    }
+    {
+        let mut guard = state
+            .last_unread_ids
+            .lock()
+            .map_err(|error| format!("notification unread lock poisoned: {error}"))?;
+        guard.clear();
+    }
 
     ensure_course_notification_polling(&app)?;
     Ok(())
@@ -654,7 +732,7 @@ pub async fn fetch_unread_notifications(
             .ok_or_else(|| "course credentials are not available yet".to_string())?
     };
 
-    fetch_unread_notifications_with_credentials(&credentials).await
+    fetch_unread_notifications_with_credentials(&state, &credentials).await
 }
 
 #[cfg(test)]
