@@ -22,6 +22,57 @@ fn build_proxy_browser_arg(url: &Url) -> Option<String> {
     }
 }
 
+const CUSTOM_SCRIPT_START_MARKER: &str = "(function () {";
+
+fn extract_custom_script_body(script: &str) -> String {
+    let lines: Vec<&str> = script.lines().collect();
+    let start = lines
+        .iter()
+        .position(|line| line.contains(CUSTOM_SCRIPT_START_MARKER))
+        .expect("custom.js is missing the userscript wrapper start marker");
+    let end = lines
+        .iter()
+        .rposition(|line| line.trim() == "})();")
+        .expect("custom.js is missing the userscript wrapper end marker");
+
+    if end <= start + 1 {
+        panic!("custom.js userscript body is empty");
+    }
+
+    lines[start + 1..end].join("\n")
+}
+
+fn build_custom_init_script(script: &str, observe_document_element: bool) -> String {
+    let custom_body = extract_custom_script_body(script);
+    let observer_target = if observe_document_element {
+        "document.documentElement"
+    } else {
+        "document"
+    };
+
+    format!(
+        r#"function onDocumentElementReady() {{
+{custom_body}
+}}
+
+(function () {{
+  if (document.head) {{
+    onDocumentElementReady();
+    return;
+  }}
+
+  const observer = new MutationObserver(() => {{
+    if (document.head) {{
+      observer.disconnect();
+      onDocumentElementReady();
+    }}
+  }});
+
+  observer.observe({observer_target}, {{ childList: true }});
+}})();"#,
+    )
+}
+
 pub fn set_window(app: &mut App, config: &PakeConfig, tauri_config: &Config) -> WebviewWindow {
     let package_name = tauri_config.clone().product_name.unwrap();
     let _data_dir = get_data_dir(app.handle(), package_name);
@@ -71,6 +122,12 @@ pub fn set_window(app: &mut App, config: &PakeConfig, tauri_config: &Config) -> 
     #[cfg(not(desktop))]
     let effective_title = "";
 
+    #[cfg(desktop)]
+    let custom_script = build_custom_init_script(include_str!("../inject/custom.js"), false);
+
+    #[cfg(not(desktop))]
+    let custom_script = build_custom_init_script(include_str!("../inject/custom.js"), true);
+
     let mut window_builder = WebviewWindowBuilder::new(app, "pake", url).user_agent(user_agent);
 
     #[cfg(desktop)]
@@ -101,7 +158,7 @@ pub fn set_window(app: &mut App, config: &PakeConfig, tauri_config: &Config) -> 
     }
 
     window_builder = window_builder
-        .initialization_script(include_str!("../inject/custom.js"))
+        .initialization_script(&custom_script)
         .initialization_script(include_str!("../inject/test.js"));
 
     #[cfg(target_os = "windows")]

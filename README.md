@@ -66,9 +66,7 @@ npm run build
 
 构建Tauri App：
 ```
-npm run build:tauri
-
-npm run build:tauri-mobile // 移动端
+npm run build
 ```
 
 之后

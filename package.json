@@ -5,9 +5,7 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "vite build",
-        "build:tauri": "node build-tauri.js",
-        "build:tauri-mobile": "node build-tauri.js mobile",
+        "build": "node build-tauri.js",
         "preview": "vite preview",
         "tauri": "tauri",
         "release": "python3 update-cdn.py update"
