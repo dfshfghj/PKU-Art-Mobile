@@ -27,24 +27,167 @@ iframe {
 
 #login form {
     padding: 0 !important;
+    display: flex;
+    flex-direction: column;
 }
 
 #login {
     background: none;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    margin: 0;
+    margin: auto;
     padding: 0;
     height: fit-content;
 }
 
-.login_logo,
-#login > form :not(.login_stu, .login_stu *, .login_btn[value="校园卡用户"]) {
+body > div > div > #login > form :not(:first-child) {
     display: none;
 }
 
-#login > form {
+.login_logo > img,
+.login_info > img {
+    display: none
+}
+#login > form > div:nth-child(3) > img {
+    display: block;
+    float: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+}
+
+#login > form > div > input {
+    flex: 1;
+    background: var(--c-input-bg);
+    border: 1px solid var(--gray-4);
+    border-radius: 6px;
+}
+
+#login > form > div {
+    position: relative;
+}
+
+#login > form > div:nth-child(1)::before {
+    content: "用户";
+    color: var(--c-title);
+    position: absolute;
+    top: -28px;
+    left: 12px;
+}
+
+#login > form > div:nth-child(2)::before {
+    content: "密码";
+    color: var(--c-title);
+    position: absolute;
+    top: -28px;
+    left: 12px;
+}
+
+#login > form > div:nth-child(3)::before {
+    content: "验证码";
+    color: var(--c-title);
+    position: absolute;
+    top: -28px;
+    left: 12px;
+}
+
+#login > form > div:nth-child(3) > label {
+    display: none;
+}
+
+:root {
+  --input: 214 32% 91%;
+  --ring: 215 20% 65%;
+  --foreground: 222 47% 11%;
+  --muted-foreground: 215 16% 47%;
+  --destructive: 0 84% 60%;
+}
+
+input {
+  height: 2rem; /* h-8 */
+  width: 100%;
+  min-width: 0;
+
+  border-radius: 0.5rem; /* rounded-lg */
+  border: 1px solid hsl(var(--input));
+
+  background-color: transparent;
+
+  padding-inline: 0.625rem; /* px-2.5 */
+  padding-block: 0.25rem;   /* py-1 */
+
+  font-size: 1rem; /* text-base */
+  line-height: 1.5rem;
+
+  outline: none;
+
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+input::placeholder {
+  color: hsl(var(--muted-foreground));
+}
+
+input:focus-visible {
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.5);
+}
+
+input:disabled {
+  pointer-events: none;
+  cursor: not-allowed;
+  background-color: hsl(var(--input) / 0.5);
+  opacity: 0.5;
+}
+
+input[aria-invalid="true"] {
+  border-color: hsl(var(--destructive));
+  box-shadow: 0 0 0 3px hsl(var(--destructive) / 0.2);
+}
+
+input::file-selector-button {
+  display: inline-flex;
+  height: 1.5rem; /* h-6 */
+  border: 0;
+  background-color: transparent;
+  font-size: 0.875rem; /* text-sm */
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+}
+
+@media (min-width: 768px) {
+  input {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+}
+
+.dark input {
+  background-color: hsl(var(--input) / 0.3);
+}
+
+.dark input:disabled {
+  background-color: hsl(var(--input) / 0.8);
+}
+
+.dark input[aria-invalid="true"] {
+  border-color: hsl(var(--destructive) / 0.5);
+  box-shadow: 0 0 0 3px hsl(var(--destructive) / 0.4);
+}
+
+.login_info {
+    display: flex;
+    align-items: center;
+    margin: 36px 0 12px 0;
+    padding: 12px;
+    border-bottom: none;
+}
+
+body > div > div > #login > form {
     width: 100%;
     height: 10px;
     display: block;
@@ -103,9 +246,52 @@ iframe {
 }
 
 .login_btn[value="校园卡用户"] {
+    order: -2;
     font-size: 16px;
     font-family: initial;
     border: 1px solid var(--c-border);
-    width: 200px !important;
+    width: 100% !important;
+    margin: 0;
     padding: 10px;
+}
+
+#login > form > input:nth-child(10) {
+    background: var(--c-button);
+    border: 1px solid var(--c-border);
+    width: 100% !important;
+    font-size: 16px;
+    font-family: initial;
+    margin: 0;
+    padding: 10px;
+}
+
+@media (max-width: 768px) {
+    #login > form::after {
+        content: "非校园卡用户";
+        color: var(--c-text);
+        order: -1;
+        margin-top: 16px;
+        font-size: small;
+        background-image:
+            linear-gradient(currentColor, currentColor),
+            linear-gradient(currentColor, currentColor);
+
+        background-repeat: no-repeat;
+
+        background-size:
+            calc(50% - 48px) 0.5px,
+            calc(50% - 48px) 0.5px;
+
+        background-position:
+            left center,
+            right center;
+    }
+
+    #login:before {
+        content: "登录到教学网";
+        color: var(--c-title);
+        font-weight: 600;
+        font-size: 24px;
+        padding-bottom: 24px;
+    }
 }
