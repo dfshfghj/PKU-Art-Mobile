@@ -32,6 +32,23 @@ async function syncCourseCredentialsToBackend(userName, password) {
         console.warn('[PKU Art] Failed to sync course credentials to backend', error);
     }
 }
+
+function ensureCookieConsentAccepted() {
+    let cookie = '';
+    try {
+        cookie = document.cookie;
+    } catch (error) {
+        console.debug('[PKU Art] Skip cookie consent sync because cookies are unavailable in this document', error);
+        return;
+    }
+
+    const consentValue = cookie.match(/(?:^|;\s*)COOKIE_CONSENT_ACCEPTED=([^;]*)/)?.[1];
+    if (consentValue && consentValue.toLowerCase() !== 'false') {
+        return;
+    }
+
+    document.cookie = 'COOKIE_CONSENT_ACCEPTED=true; domain=.pku.edu.cn; path=/';
+}
 // Other utilities
 function initializeLogoNavigation() {
     if (!/^https:\/\/course\.pku\.edu\.cn\//.test(window.location.href)) {
@@ -2754,6 +2771,7 @@ function initializeSettingPage() {
 
 export {
     insertNav,
+    ensureCookieConsentAccepted,
     initializeLogoNavigation,
     ensureSidebarVisible,
     overrideSiteIcons,

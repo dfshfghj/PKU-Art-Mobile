@@ -3,6 +3,7 @@ import applyStylesForCurrentPage from './style.js';
 import { initializeThemeManager, initializeThemeToggleButton } from './theme.js';
 import {
     insertNav,
+    ensureCookieConsentAccepted,
     initializeLogoNavigation,
     ensureSidebarVisible,
     overrideSiteIcons,
@@ -55,6 +56,7 @@ function initializePdfViewerFallbackOnDemand() {
 if (!isInjectedPdfViewerFrame()) {
 insertNav();
 applyStylesForCurrentPage();
+ensureCookieConsentAccepted();
 initializeMenuToggleButton();
 initializeMobileCourseHeaderLayout();
 initializePdfViewerFallbackOnDemand();
