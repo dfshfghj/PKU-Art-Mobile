@@ -1485,6 +1485,20 @@ function formatAnnouncementTime() {
 }
 
 function initializeSettingButton() {
+    const ensureMenuSpacer = (navWrap) => {
+        let spacer = navWrap.querySelector('.pku-art-menu-spacer');
+        if (spacer) {
+            return spacer;
+        }
+
+        spacer = document.createElement('div');
+        spacer.className = 'pku-art-menu-spacer';
+        spacer.style.flex = '1 1 auto';
+        spacer.style.minWidth = '20px';
+        navWrap.appendChild(spacer);
+        return spacer;
+    };
+
     const addSettingButton = () => {
         if (document.querySelector('.pku-art-setting-bar')) {
             return;
@@ -1498,17 +1512,12 @@ function initializeSettingButton() {
         const settingButton = document.createElement('div');
         settingButton.className = 'pku-art-setting-bar global-nav-bar mobile-only';
         settingButton.innerHTML = `<a href="https://course.pku.edu.cn/webapps/blackboard/execute/personalInfo" style="background: var(--i-setting) no-repeat center; width: 100%; height: 100%;"></a>`;
-
-        const spacer = globalNavBarWrap.querySelector('.pku-art-menu-spacer');
-        if (spacer) {
-            spacer.insertAdjacentElement('afterend', settingButton);
-        } else {
-            globalNavBarWrap.appendChild(settingButton);
-        }
+        const spacer = ensureMenuSpacer(globalNavBarWrap);
+        globalNavBarWrap.insertBefore(settingButton, spacer);
     };
 
     const observer = new MutationObserver(() => {
-        if (document.querySelector('.global-nav-bar-wrap') && document.querySelector('.pku-art-menu-spacer')) {
+        if (document.querySelector('.global-nav-bar-wrap')) {
             addSettingButton();
         }
 
@@ -1549,11 +1558,6 @@ function initializeMenuToggleButton() {
             return;
         }
 
-        const spacer = document.createElement('div');
-        spacer.className = 'pku-art-menu-spacer';
-        spacer.style.flex = '1 1 auto';
-        spacer.style.minWidth = '20px';
-
         const menuToggleBar = document.createElement('div');
         menuToggleBar.className = 'pku-art-menu-toggle-bar global-nav-bar mobile-only';
         menuToggleBar.title = '展开侧边栏菜单';
@@ -1571,8 +1575,18 @@ function initializeMenuToggleButton() {
         });
 
         menuToggleBar.appendChild(menuToggleButton);
+        const spacer = navWrap.querySelector('.pku-art-menu-spacer');
+        if (spacer) {
+            navWrap.insertBefore(menuToggleBar, spacer);
+            return;
+        }
+
         navWrap.appendChild(menuToggleBar);
-        navWrap.appendChild(spacer);
+        const newSpacer = document.createElement('div');
+        newSpacer.className = 'pku-art-menu-spacer';
+        newSpacer.style.flex = '1 1 auto';
+        newSpacer.style.minWidth = '20px';
+        navWrap.appendChild(newSpacer);
     }
     addMenuToggleButton();
 }
@@ -1717,16 +1731,7 @@ function initializeMobileCourseHeaderLayout() {
 
         headerHost = document.createElement('div');
         headerHost.className = 'pku-art-mobile-course-header';
-
-        const spacer = navWrap.querySelector('.pku-art-menu-spacer');
-        const menuToggleBar = navWrap.querySelector('.pku-art-menu-toggle-bar');
-        if (spacer) {
-            navWrap.insertBefore(headerHost, spacer);
-        } else if (menuToggleBar) {
-            menuToggleBar.insertAdjacentElement('afterend', headerHost);
-        } else {
-            navWrap.insertAdjacentElement('afterbegin', headerHost);
-        }
+        navWrap.appendChild(headerHost);
 
         return headerHost;
     };

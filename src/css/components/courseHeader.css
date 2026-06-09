@@ -330,18 +330,20 @@ body .global-nav-bar-wrap {
         width: min-content;
     }
 
-    body.pku-art-mobile-course-header-active .global-nav-bar-wrap {
+    body .global-nav-bar-wrap {
         flex-direction: row;
         justify-content: flex-start;
         align-items: center;
     }
 
     body.pku-art-mobile-course-header-active .pku-art-menu-toggle-bar {
+        order: 1;
         flex: 0 0 auto;
         height: 32px;
     }
 
     body.pku-art-mobile-course-header-active .pku-art-mobile-course-header {
+        order: 2;
         line-height: normal;
         padding: 0 10px;
         display: flex;
@@ -350,6 +352,18 @@ body .global-nav-bar-wrap {
         justify-content: center;
         min-width: 0;
         overflow: hidden;
+    }
+
+    body .pku-art-menu-spacer {
+        order: 3;
+    }
+
+    body .global-nav-bar-wrap > .global-nav-bar:not(.pku-art-menu-toggle-bar):not(.pku-art-setting-bar) {
+        order: 4;
+    }
+
+    body .pku-art-setting-bar {
+        order: 5;
     }
 
     body.pku-art-mobile-course-header-active #breadcrumbs {
