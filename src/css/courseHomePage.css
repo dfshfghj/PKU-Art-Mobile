@@ -333,6 +333,6 @@ div.edit_controls > a:hover::before {
     }
 }
 
-ul > li > a:not(.pku-art-course-serial-cleaned) {
+.containerPortal > div:not(:first-child) .portlet .portletList-img > li > a:not(.pku-art-course-serial-cleaned) {
     display: none !important;
 }

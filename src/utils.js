@@ -7,6 +7,8 @@ import { fetch as fetch_rs } from '@tauri-apps/plugin-http';
 import { saveLogs, clearLogs } from './logger.js';
 
 let store = null;
+const COURSE_LOGIN_REFRESH_WINDOW_MS = 1000 * 60 * 60 * 2;
+
 async function getStore() {
   if (!store) {
     store = await Store.load('user.json');
@@ -33,16 +35,99 @@ async function syncCourseCredentialsToBackend(userName, password) {
     }
 }
 
-function ensureCookieConsentAccepted() {
+function getCookieValue(name) {
     let cookie = '';
     try {
         cookie = document.cookie;
+    } catch (error) {
+        return null;
+    }
+
+    return cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`))?.[1] ?? null;
+}
+
+function markCourseLoginRefreshed() {
+    const timestamp = Date.now();
+    document.cookie = `course_login=true; domain=.pku.edu.cn; path=/`;
+    document.cookie = `course_last_login=${timestamp}; domain=.pku.edu.cn; path=/`;
+}
+
+function getBlackboardXsrfToken() {
+    if (typeof window.bbSessionActivityTimer?.ajaxNonce === 'string' && window.bbSessionActivityTimer.ajaxNonce) {
+        return window.bbSessionActivityTimer.ajaxNonce;
+    }
+
+    if (typeof window.courseMenu?.nonceValue === 'string' && window.courseMenu.nonceValue) {
+        return window.courseMenu.nonceValue;
+    }
+
+    const ajaxNonceInput = document.getElementById('ajaxNonceId');
+    if (ajaxNonceInput instanceof HTMLInputElement && ajaxNonceInput.value) {
+        return ajaxNonceInput.value;
+    }
+
+    const nonceInput = document.querySelector(
+        'input[name="blackboard.platform.security.NonceUtil.nonce.ajax"], input[name="blackboard.platform.security.NonceUtil.nonce"]'
+    );
+    if (nonceInput instanceof HTMLInputElement && nonceInput.value) {
+        return nonceInput.value;
+    }
+
+    const inlineScriptToken = Array.from(document.scripts)
+        .map((script) => script.textContent || '')
+        .map((text) => text.match(/bbSessionActivityTimer\.startTimer\(\s*\d+\s*,\s*['"]([0-9a-f-]{36})['"]\s*\)/i)?.[1])
+        .find(Boolean);
+    if (inlineScriptToken) {
+        return inlineScriptToken;
+    }
+
+    return null;
+}
+
+async function keepBlackboardSessionAlive() {
+    const xsrfToken = getBlackboardXsrfToken();
+    if (!xsrfToken) {
+        console.debug('[PKU Art] Skip keepBbSessionActive because XSRF token is unavailable');
+        return false;
+    }
+
+    try {
+        const response = await fetch('https://course.pku.edu.cn/learn/api/v1/utilities/keepBbSessionActive', {
+            method: 'POST',
+            headers: {
+                'Cache-Control': 'no-cache',
+                Pragma: 'no-cache',
+                accept: 'application/json, text/javascript, */*; q=0.01',
+                'content-type': 'application/json',
+                'x-blackboard-xsrf': xsrfToken,
+                'x-requested-with': 'XMLHttpRequest',
+            },
+            credentials: 'include',
+        });
+
+        if (!response.ok) {
+            console.warn('[PKU Art] keepBbSessionActive failed', response.status, response.statusText);
+            return false;
+        }
+
+        markCourseLoginRefreshed();
+        console.debug('[PKU Art] Blackboard session refreshed via keepBbSessionActive');
+        return true;
+    } catch (error) {
+        console.warn('[PKU Art] keepBbSessionActive request failed', error);
+        return false;
+    }
+}
+
+function ensureCookieConsentAccepted() {
+    try {
+        document.cookie;
     } catch (error) {
         console.debug('[PKU Art] Skip cookie consent sync because cookies are unavailable in this document', error);
         return;
     }
 
-    const consentValue = cookie.match(/(?:^|;\s*)COOKIE_CONSENT_ACCEPTED=([^;]*)/)?.[1];
+    const consentValue = getCookieValue('COOKIE_CONSENT_ACCEPTED');
     if (consentValue && consentValue.toLowerCase() !== 'false') {
         return;
     }
@@ -2129,10 +2214,6 @@ async function persistUserInfo() {
 }
 
 async function autoLogin() {
-    if (import.meta.env.MODE !== 'tauri') {
-        return
-    }
-
     if (!/^https:\/\/course\.pku\.edu\.cn\/\S*$/.test(window.location.href)) {
         return
     }
@@ -2147,7 +2228,22 @@ async function autoLogin() {
 
     console.debug(window.location.href, cookie);
 
-    if (cookie.includes('course_login=true') && Date.now() - cookie.match(/course_last_login=([^;]*)/)?.[1] < 1000 * 60 * 60 * 3) {
+    const hasCourseLogin = cookie.includes('course_login=true');
+    const lastLoginTimestamp = Number(getCookieValue('course_last_login') || 0);
+    const courseLoginExpired = !lastLoginTimestamp || Date.now() - lastLoginTimestamp >= COURSE_LOGIN_REFRESH_WINDOW_MS;
+
+    if (hasCourseLogin && !courseLoginExpired) {
+        return
+    }
+
+    if (hasCourseLogin && courseLoginExpired) {
+        const keepAliveSucceeded = await keepBlackboardSessionAlive();
+        if (keepAliveSucceeded) {
+            return
+        }
+    }
+
+    if (import.meta.env.MODE !== 'tauri') {
         return
     }
 
@@ -2169,9 +2265,7 @@ async function autoLogin() {
         const data = await res.json();
         if (data.success === true) {
             const token = data.token;
-            const timestamp = Date.now();
-            document.cookie = `course_login=true; domain=.pku.edu.cn; path=/`;
-            document.cookie = `course_last_login=${timestamp}; domain=.pku.edu.cn; path=/`;
+            markCourseLoginRefreshed();
             // window.location.href = `https://course.pku.edu.cn/webapps/bb-sso-BBLEARN/execute/authValidate/campusLogin?_rand=${Math.random()}&token=${token}`;
             await fetch(`https://course.pku.edu.cn/webapps/bb-sso-BBLEARN/execute/authValidate/campusLogin?_rand=${Math.random()}&token=${token}`);
             location.replace(location.href);
