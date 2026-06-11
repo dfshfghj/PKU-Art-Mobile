@@ -21,6 +21,7 @@ import {
     customizeIaaaRememberCheckbox,
     removeConflictJQuery,
     initializeBottomNavigationBar,
+    initializePageTransitionLoading,
     formatAnnouncementTime,
     initializeMobileCourseHeaderLayout,
     initializeMenuToggleButton,
@@ -79,6 +80,7 @@ customizeIaaaRememberCheckbox();
 removeConflictJQuery();
 removeBootstrap();
 initializeBottomNavigationBar();
+initializePageTransitionLoading();
 formatAnnouncementTime();
 initializePageTitleText();
 convertBlankLinksToTop();

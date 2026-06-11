@@ -119,6 +119,175 @@ async function keepBlackboardSessionAlive() {
     }
 }
 
+function showAutoLoginOverlay() {
+    if (document.getElementById('pkuArtAutoLoginOverlay')) {
+        return;
+    }
+
+    const overlay = document.createElement('div');
+    overlay.id = 'pkuArtAutoLoginOverlay';
+    overlay.style.cssText = `
+        position: fixed;
+        inset: 0;
+        z-index: 2147483647;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        pointer-events: all;
+    `;
+    overlay.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px 28px;border-radius:18px;background:transparent;box-shadow:0 12px 36px rgba(0,0,0,0.12);color:var(--c-text);text-align:center;max-width:280px;">
+            <div style="width:40px;height:40px;border:4px solid rgba(22,93,255,0.18);border-top-color:#165dff;border-radius:50%;animation:pku-art-autologin-spin 0.9s linear infinite;"></div>
+            <div style="font-size:16px;font-weight:600;">正在自动登录</div>
+            <div style="font-size:13px;line-height:1.5;color:#4b5563;">请稍候，系统正在恢复登录状态。<br>暂时不要手动操作登录窗口。</div>
+        </div>
+        <style>
+            @keyframes pku-art-autologin-spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+        </style>
+    `;
+
+    if (document.body) {
+        document.body.appendChild(overlay);
+    } else {
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!document.getElementById('pkuArtAutoLoginOverlay')) {
+                document.body?.appendChild(overlay);
+            }
+        }, { once: true });
+    }
+}
+
+function hideAutoLoginOverlay() {
+    document.getElementById('pkuArtAutoLoginOverlay')?.remove();
+}
+
+function showPageTransitionOverlay(message = '页面加载中') {
+    const existingOverlay = document.getElementById('pkuArtPageTransitionOverlay');
+    if (existingOverlay) {
+        const textNode = existingOverlay.querySelector('[data-pku-art-transition-text]');
+        if (textNode) {
+            textNode.textContent = message;
+        }
+        return;
+    }
+
+    const overlay = document.createElement('div');
+    overlay.id = 'pkuArtPageTransitionOverlay';
+    overlay.style.cssText = `
+        position: fixed;
+        inset: 0;
+        z-index: 2147483646;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+        pointer-events: all;
+    `;
+    overlay.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px 24px;border-radius:16px;background:transparent;box-shadow:0 10px 30px rgba(0,0,0,0.10);color:var(--c-text);text-align:center;max-width:240px;">
+            <div style="width:34px;height:34px;border:4px solid rgba(22,93,255,0.16);border-top-color:#165dff;border-radius:50%;animation:pku-art-page-transition-spin 0.8s linear infinite;"></div>
+            <div data-pku-art-transition-text style="font-size:15px;font-weight:600;">${message}</div>
+        </div>
+        <style>
+            @keyframes pku-art-page-transition-spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+        </style>
+    `;
+
+    if (document.body) {
+        document.body.appendChild(overlay);
+    } else {
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!document.getElementById('pkuArtPageTransitionOverlay')) {
+                document.body?.appendChild(overlay);
+            }
+        }, { once: true });
+    }
+}
+
+function initializePageTransitionLoading() {
+    if (!/^https:\/\/course\.pku\.edu\.cn\//.test(window.location.href)) {
+        return;
+    }
+
+    const shouldShowForAnchor = (anchor) => {
+        if (!(anchor instanceof HTMLAnchorElement)) {
+            return false;
+        }
+
+        const href = anchor.getAttribute('href');
+        if (!href || href.startsWith('#') || href.startsWith('javascript:')) {
+            return false;
+        }
+
+        const target = anchor.getAttribute('target');
+        if (target && target !== '_self' && target !== '_top') {
+            return false;
+        }
+
+        const download = anchor.getAttribute('download');
+        if (download !== null) {
+            return false;
+        }
+
+        try {
+            const resolvedUrl = new URL(anchor.href, window.location.href);
+            if (!/^https?:$/.test(resolvedUrl.protocol)) {
+                return false;
+            }
+
+            return resolvedUrl.href !== window.location.href;
+        } catch (error) {
+            return false;
+        }
+    };
+
+    document.addEventListener('click', (event) => {
+        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+            return;
+        }
+
+        const anchor = event.target instanceof Element ? event.target.closest('a') : null;
+        if (!shouldShowForAnchor(anchor)) {
+            return;
+        }
+
+        showPageTransitionOverlay();
+    }, true);
+
+    document.addEventListener('submit', (event) => {
+        if (event.defaultPrevented) {
+            return;
+        }
+
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement)) {
+            return;
+        }
+
+        const action = form.getAttribute('action');
+        if (action?.startsWith('javascript:')) {
+            return;
+        }
+
+        showPageTransitionOverlay('正在跳转页面');
+    }, true);
+
+    window.addEventListener('beforeunload', () => {
+        showPageTransitionOverlay();
+    });
+}
+
 function ensureCookieConsentAccepted() {
     try {
         document.cookie;
@@ -2254,24 +2423,32 @@ async function autoLogin() {
         const password = user.password;
         await syncCourseCredentialsToBackend(userName, password);
         console.debug('autoLogin', userName, password);
+        showAutoLoginOverlay();
 
-        const res = await fetch_rs('https://iaaa.pku.edu.cn/iaaa/oauthlogin.do', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `appid=blackboard&userName=${userName}&password=${password}&randCode=&smsCode=&otpCode=&remTrustChk=false&redirUrl=http%3A%2F%2Fcourse.pku.edu.cn%2Fwebapps%2Fbb-sso-BBLEARN%2Fexecute%2FauthValidate%2FcampusLogin`
-        })
-        const data = await res.json();
-        if (data.success === true) {
-            const token = data.token;
-            markCourseLoginRefreshed();
-            // window.location.href = `https://course.pku.edu.cn/webapps/bb-sso-BBLEARN/execute/authValidate/campusLogin?_rand=${Math.random()}&token=${token}`;
-            await fetch(`https://course.pku.edu.cn/webapps/bb-sso-BBLEARN/execute/authValidate/campusLogin?_rand=${Math.random()}&token=${token}`);
-            location.replace(location.href);
-            console.debug('Login Successful', JSON.stringify(data));
-        } else {
+        try {
+            const res = await fetch_rs('https://iaaa.pku.edu.cn/iaaa/oauthlogin.do', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `appid=blackboard&userName=${userName}&password=${password}&randCode=&smsCode=&otpCode=&remTrustChk=false&redirUrl=http%3A%2F%2Fcourse.pku.edu.cn%2Fwebapps%2Fbb-sso-BBLEARN%2Fexecute%2FauthValidate%2FcampusLogin`
+            })
+            const data = await res.json();
+            if (data.success === true) {
+                const token = data.token;
+                markCourseLoginRefreshed();
+                // window.location.href = `https://course.pku.edu.cn/webapps/bb-sso-BBLEARN/execute/authValidate/campusLogin?_rand=${Math.random()}&token=${token}`;
+                await fetch(`https://course.pku.edu.cn/webapps/bb-sso-BBLEARN/execute/authValidate/campusLogin?_rand=${Math.random()}&token=${token}`);
+                location.replace(location.href);
+                console.debug('Login Successful', JSON.stringify(data));
+                return;
+            }
+
             console.warn('Login Failed', JSON.stringify(data));
+        } catch (error) {
+            console.warn('[PKU Art] autoLogin request failed', error);
+        } finally {
+            hideAutoLoginOverlay();
         }
     }
 }
@@ -2883,6 +3060,7 @@ export {
     customizeIaaaRememberCheckbox,
     removeConflictJQuery,
     initializeBottomNavigationBar,
+    initializePageTransitionLoading,
     formatAnnouncementTime,
     initializeSettingButton,
     initializeMenuToggleButton,
