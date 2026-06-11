@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="pake_surface">#FF14110F</color>
+    <color name="pake_on_surface">#FFF4EFE8</color>
+    <color name="pake_splash_background">#FF14110F</color>
+</resources>

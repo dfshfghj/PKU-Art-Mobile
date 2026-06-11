@@ -1,0 +1,15 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.pake" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/pake_surface</item>
+        <item name="android:colorBackground">@color/pake_surface</item>
+        <item name="colorSurface">@color/pake_surface</item>
+        <item name="android:textColor">@color/pake_on_surface</item>
+    </style>
+
+    <style name="Theme.pake.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/pake_splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.pake</item>
+    </style>
+</resources>

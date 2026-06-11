@@ -26,6 +26,15 @@
 !/gen/android/app/src/main/res/raw/
 /gen/android/app/src/main/res/raw/*
 !/gen/android/app/src/main/res/raw/globalsign_gcc_r6_alphassl_ca_2025.pem
+!/gen/android/app/build.gradle.kts
+!/gen/android/app/src/main/res/values/
+/gen/android/app/src/main/res/values/*
+!/gen/android/app/src/main/res/values/colors.xml
+!/gen/android/app/src/main/res/values/themes.xml
+!/gen/android/app/src/main/res/values-night/
+/gen/android/app/src/main/res/values-night/*
+!/gen/android/app/src/main/res/values-night/colors.xml
+!/gen/android/app/src/main/res/values-night/themes.xml
 !/gen/android/app/src/main/res/xml/
 /gen/android/app/src/main/res/xml/*
 !/gen/android/app/src/main/res/xml/file_paths.xml
