@@ -151,7 +151,8 @@ pub fn set_window(app: &mut App, config: &PakeConfig, tauri_config: &Config) -> 
         .initialization_script(&config_script)
         .initialization_script(include_str!("../inject/component.js"))
         .initialization_script(include_str!("../inject/event.js"))
-        .initialization_script(include_str!("../inject/style.js"));
+        .initialization_script(include_str!("../inject/style.js"))
+        .initialization_script(include_str!("../inject/native-network-error-page.js"));
 
     if let Some(pdf_viewer_loader_script) = pdf_viewer_loader_script {
         window_builder = window_builder.initialization_script(pdf_viewer_loader_script);
