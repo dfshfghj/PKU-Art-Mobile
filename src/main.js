@@ -1,4 +1,3 @@
-import './logger.js';
 import applyStylesForCurrentPage from './style.js';
 import { initializeThemeManager, initializeThemeToggleButton } from './theme.js';
 import {

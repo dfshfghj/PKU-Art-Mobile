@@ -91,6 +91,10 @@
     return window.__TAURI__?.core?.invoke || null;
   }
 
+  function getTauriBridge() {
+    return window.PkuArtTauri || null;
+  }
+
   function setRowState(key, state, message) {
     const row = document.querySelector(`[data-test-key="${key}"]`);
     if (!row) {
@@ -122,9 +126,10 @@
 
     return [
       "core.invoke 可用",
+      `Bridge=${!!getTauriBridge()}`,
       `Notification=${typeof window.Notification === "function"}`,
-      `Store=${typeof window.Store === "function"}`,
-      `fetch_rs=${typeof window.fetch_rs === "function"}`,
+      `Store=${!!getTauriBridge()?.store}`,
+      `HTTP=${typeof getTauriBridge()?.http?.fetch === "function"}`,
     ].join(" | ");
   }
 
@@ -145,8 +150,9 @@
   }
 
   async function runStoreTest() {
-    if (typeof window.Store !== "function") {
-      throw new Error("window.Store 不可用");
+    const tauri = getTauriBridge();
+    if (!tauri?.store?.open) {
+      throw new Error("window.PkuArtTauri.store 不可用");
     }
 
     const payload = {
@@ -154,11 +160,11 @@
       href: window.location.href,
       userAgent: navigator.userAgent,
     };
-    const store = await window.Store.load("pku-art-test.json");
+    const store = tauri.store.open("pku-art-test.json");
     await store.set("lastSettingPageTest", payload);
     await store.save();
 
-    const reloadedStore = await window.Store.load("pku-art-test.json");
+    const reloadedStore = tauri.store.open("pku-art-test.json");
     const savedPayload = await reloadedStore.get("lastSettingPageTest");
     if (!savedPayload?.savedAt) {
       throw new Error("Store 已保存，但读取回来的数据为空");

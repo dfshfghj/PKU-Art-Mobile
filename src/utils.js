@@ -1,33 +1,35 @@
 import { downloadIcon, linkIcon, sparkIcon, refreshIcon, closeIcon, homeIcon, gradeIcon, notificationIcon, announcementIcon, menuIcon } from './icon.js';
-import '@saurl/tauri-plugin-safe-area-insets-css-api';
-import { invoke } from '@tauri-apps/api/core';
-import { openUrl as openExternalUrl } from '@tauri-apps/plugin-opener';
-import { Store } from '@tauri-apps/plugin-store';
-import { fetch as fetch_rs } from '@tauri-apps/plugin-http';
-import { saveLogs, clearLogs } from './logger.js';
 
 let store = null;
 const COURSE_LOGIN_REFRESH_WINDOW_MS = 1000 * 60 * 60 * 2;
 
+function getTauriBridge() {
+    return window.PkuArtTauri || null;
+}
+
+function isTauriRuntime() {
+    return !!getTauriBridge();
+}
+
 async function getStore() {
+  const tauri = getTauriBridge();
+  if (!tauri) {
+    return null;
+  }
   if (!store) {
-    store = await Store.load('user.json');
+    store = tauri.store.open('user.json');
   }
   return store;
 }
 
-if (import.meta.env.MODE == 'tauri') {
-    window.fetch_rs = fetch_rs;
-    window.Store = Store;
-}
-
 async function syncCourseCredentialsToBackend(userName, password) {
-    if (import.meta.env.MODE !== 'tauri' || !userName || !password) {
+    const tauri = getTauriBridge();
+    if (!tauri || !userName || !password) {
         return;
     }
 
     try {
-        await invoke('sync_course_credentials', {
+        await tauri.invoke('sync_course_credentials', {
             params: { userName, password },
         });
     } catch (error) {
@@ -1230,8 +1232,6 @@ function enableDirectOpenLinks() {
         return;
     }
 
-    const isTauriRuntime = import.meta.env.MODE == 'tauri';
-
     const isExternalHttpUrl = (href) => {
         if (!href || href.startsWith('#')) {
             return false;
@@ -1293,7 +1293,7 @@ function enableDirectOpenLinks() {
 
     document.addEventListener('DOMContentLoaded', stripOnclickHandlers);
 
-    if (!isTauriRuntime) {
+    if (!isTauriRuntime()) {
         return;
     }
 
@@ -1315,7 +1315,7 @@ function enableDirectOpenLinks() {
             event.stopPropagation();
             link.removeAttribute('onclick');
             console.log('[PKU Art] 通过系统浏览器打开外链:', externalUrl);
-            openExternalUrl(externalUrl).catch((error) => {
+            getTauriBridge()?.shell?.openUrl?.(externalUrl).catch((error) => {
                 console.error('[PKU Art] 使用系统浏览器打开外链失败:', externalUrl, error);
             });
         },
@@ -2334,11 +2334,14 @@ function setViewportMeta() {
 }
 
 async function persistUserInfo() {
-    if (import.meta.env.MODE !== 'tauri') {
+    if (!isTauriRuntime()) {
         return
     }
 
     const store = await getStore();
+    if (!store) {
+        return
+    }
 
     const origOpen = XMLHttpRequest.prototype.open;
     const origSend = XMLHttpRequest.prototype.send;
@@ -2412,11 +2415,14 @@ async function autoLogin() {
         }
     }
 
-    if (import.meta.env.MODE !== 'tauri') {
+    if (!isTauriRuntime()) {
         return
     }
 
     const store = await getStore();
+    if (!store) {
+        return
+    }
     const user = await store.get('user');
     if (user) {
         const userName = user.userName;
@@ -2426,7 +2432,7 @@ async function autoLogin() {
         showAutoLoginOverlay();
 
         try {
-            const res = await fetch_rs('https://iaaa.pku.edu.cn/iaaa/oauthlogin.do', {
+            const res = await getTauriBridge().http.fetch('https://iaaa.pku.edu.cn/iaaa/oauthlogin.do', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -2454,7 +2460,7 @@ async function autoLogin() {
 }
 
 async function portalLogin() {
-    if (import.meta.env.MODE !== 'tauri') {
+    if (!isTauriRuntime()) {
         return
     }
 
@@ -2477,6 +2483,9 @@ async function portalLogin() {
     console.log('portalLogin');
 
     const store = await getStore();
+    if (!store) {
+        return
+    }
     const user = await store.get('user');
     if (user) {
         const userName = user.userName;
@@ -2484,7 +2493,7 @@ async function portalLogin() {
         await syncCourseCredentialsToBackend(userName, password);
         console.debug('portalLogin', userName, password);
 
-        const res = await fetch_rs('https://iaaa.pku.edu.cn/iaaa/oauthlogin.do', {
+        const res = await getTauriBridge().http.fetch('https://iaaa.pku.edu.cn/iaaa/oauthlogin.do', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -2498,7 +2507,7 @@ async function portalLogin() {
             const timestamp = Date.now();
             document.cookie = `portal_login=true; domain=.pku.edu.cn; path=/`;
             document.cookie = `portal_last_login=${timestamp}; domain=.pku.edu.cn; path=/`;
-            await fetch_rs(`https://portal.pku.edu.cn/portal2017/ssoLogin.do?_rand=${Math.random()}&token=${token}`);
+            await getTauriBridge().http.fetch(`https://portal.pku.edu.cn/portal2017/ssoLogin.do?_rand=${Math.random()}&token=${token}`);
             console.debug('Login Successful', JSON.stringify(data));
         } else {
             console.warn('Login Failed', JSON.stringify(data));
@@ -2540,14 +2549,14 @@ async function displayGrades() {
     `;
     document.body.appendChild(loadingElement);
 
-    if (import.meta.env.MODE !== 'tauri') {
+    if (!isTauriRuntime()) {
         return
     }
 
     try {
         await portalLogin();
-        await fetch_rs('https://portal.pku.edu.cn/portal2017/util/portletRedir.do?portletId=myscores');
-        const res = await fetch_rs('https://portal.pku.edu.cn/publicQuery/ctrl/topic/myScore/retrScores.do');
+        await getTauriBridge().http.fetch('https://portal.pku.edu.cn/portal2017/util/portletRedir.do?portletId=myscores');
+        const res = await getTauriBridge().http.fetch('https://portal.pku.edu.cn/publicQuery/ctrl/topic/myScore/retrScores.do');
         const data = await res.json();
         console.log(JSON.stringify(data.cjxx[0].list));
         const container = document.querySelector('div.stream_page');
@@ -3015,14 +3024,14 @@ function initializeSettingPage() {
         const saveLogsText = document.getElementById('saveLogsText');
         if (saveLogsText) {
             saveLogsText.addEventListener('click', async () => {
-                await saveLogs();
+                await getTauriBridge()?.logs?.saveLogs?.();
             });
         }
 
         const clearLogsText = document.getElementById('clearLogsText');
         if (clearLogsText) {
             clearLogsText.addEventListener('click', async () => {
-                await clearLogs();
+                await getTauriBridge()?.logs?.clearLogs?.();
             });
         }
     };
