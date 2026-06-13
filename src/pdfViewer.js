@@ -4,6 +4,7 @@ import viewerModule from './pdfjs-official/web/viewer.mjs?raw';
 import pdfModule from './pdfjs-official/build/pdf.mjs?raw';
 import pdfWorkerModule from './pdfjs-official/build/pdf.worker.mjs?raw';
 import pdfSandboxModule from './pdfjs-official/build/pdf.sandbox.mjs?raw';
+import pdfjsRuntimeCompat from './pdfjsRuntimeCompat.js?raw';
 
 const viewerImages = import.meta.glob('./pdfjs-official/web/images/*', {
     query: '?inline',
@@ -47,7 +48,7 @@ const viewerResourceUrls = {
 const FILE_VIEW_URL_PATTERN = /^https:\/\/course\.pku\.edu\.cn\/webapps\/\S*content\/file\?cmd=view\S*$/;
 const PDF_VIEWER_ROOT_CLASS = 'pku-art-pdf-viewer';
 const PDF_TARGET_SELECTOR = 'embed, iframe, object';
-const PDFJS_RESOURCE_ROOT = 'pku-art-pdfjs-resource://web/';
+const PDFJS_RESOURCE_ROOT = 'https://course.pku.edu.cn/pku-art-pdfjs-resource/web/';
 
 const OFFICIAL_VIEWER_URLS = {
     pdf: null,
@@ -55,52 +56,15 @@ const OFFICIAL_VIEWER_URLS = {
     sandbox: null,
 };
 
-const PDFJS_RUNTIME_POLYFILLS = `
-if (!Uint8Array.prototype.toHex) {
-  Object.defineProperty(Uint8Array.prototype, "toHex", {
-    value: function toHex() {
-      let result = "";
-      for (let i = 0; i < this.length; i += 1) {
-        result += this[i].toString(16).padStart(2, "0");
-      }
-      return result;
-    },
-    configurable: true,
-    writable: true
-  });
-}
-if (typeof Map.prototype.getOrInsertComputed !== "function") {
-  Object.defineProperty(Map.prototype, "getOrInsertComputed", {
-    value: function getOrInsertComputed(key, callbackFn) {
-      if (!this.has(key)) {
-        this.set(key, callbackFn(key));
-      }
-      return this.get(key);
-    },
-    configurable: true,
-    writable: true
-  });
-}
-if (typeof Promise.withResolvers !== "function") {
-  Promise.withResolvers = function withResolvers() {
-    let resolve;
-    let reject;
-    const promise = new Promise((promiseResolve, promiseReject) => {
-      resolve = promiseResolve;
-      reject = promiseReject;
-    });
-    return { promise, resolve, reject };
-  };
-}
-if (typeof Math.sumPrecise !== "function") {
-  Math.sumPrecise = function sumPrecise(numbers) {
-    return Array.from(numbers).reduce((sum, value) => sum + value, 0);
-  };
-}
-`;
-
 function createScriptUrl(source, options = {}) {
-    const script = options.withPdfJsPolyfills ? `${PDFJS_RUNTIME_POLYFILLS}\n${source}` : source;
+    const prelude = [];
+    if (options.withPdfJsPolyfills) {
+        prelude.push(pdfjsRuntimeCompat);
+    }
+    if (options.withPdfJsResourceProxy) {
+        prelude.push(createPdfJsResourceRuntime());
+    }
+    const script = prelude.length > 0 ? `${prelude.join('\n')}\n${source}` : source;
     return URL.createObjectURL(new Blob([script], { type: 'text/javascript' }));
 }
 
@@ -109,9 +73,18 @@ function getOfficialViewerUrls() {
         return OFFICIAL_VIEWER_URLS;
     }
 
-    OFFICIAL_VIEWER_URLS.pdf = createScriptUrl(pdfModule, { withPdfJsPolyfills: true });
-    OFFICIAL_VIEWER_URLS.worker = createScriptUrl(pdfWorkerModule, { withPdfJsPolyfills: true });
-    OFFICIAL_VIEWER_URLS.sandbox = createScriptUrl(pdfSandboxModule, { withPdfJsPolyfills: true });
+    OFFICIAL_VIEWER_URLS.pdf = createScriptUrl(pdfModule, {
+        withPdfJsPolyfills: true,
+        withPdfJsResourceProxy: true,
+    });
+    OFFICIAL_VIEWER_URLS.worker = createScriptUrl(pdfWorkerModule, {
+        withPdfJsPolyfills: true,
+        withPdfJsResourceProxy: true,
+    });
+    OFFICIAL_VIEWER_URLS.sandbox = createScriptUrl(pdfSandboxModule, {
+        withPdfJsPolyfills: true,
+        withPdfJsResourceProxy: true,
+    });
     return OFFICIAL_VIEWER_URLS;
 }
 
@@ -127,7 +100,10 @@ function createOfficialViewerUrl(pdfObjectUrl) {
         .replace('value: "../web/standard_fonts/"', `value: ${JSON.stringify(`${PDFJS_RESOURCE_ROOT}standard_fonts/`)}`)
         .replace('value: "../web/wasm/"', `value: ${JSON.stringify(`${PDFJS_RESOURCE_ROOT}wasm/`)}`);
 
-    const viewerModuleUrl = createScriptUrl(module, { withPdfJsPolyfills: true });
+    const viewerModuleUrl = createScriptUrl(module, {
+        withPdfJsPolyfills: true,
+        withPdfJsResourceProxy: true,
+    });
     const resourceScript = createPdfJsResourceScript();
     const html = viewerHtml
         .replace(/<meta[^>]+http-equiv=["']Content-Security-Policy["'][^>]*>\s*/i, '')
@@ -153,34 +129,78 @@ function inlineViewerCssImages(css) {
 }
 
 function createPdfJsResourceScript() {
+    return `<script>${createPdfJsResourceRuntime()}</script>`;
+}
+
+function createPdfJsResourceRuntime() {
     const resources = {};
     for (const [path, url] of Object.entries(viewerResourceUrls)) {
         resources[path.replace('./pdfjs-official/web/', '')] = url;
     }
 
-    return `<script>
+    return `
 (() => {
+  if (globalThis.__PKU_ART_PDFJS_RESOURCE_PROXY_READY__) {
+    return;
+  }
+  globalThis.__PKU_ART_PDFJS_RESOURCE_PROXY_READY__ = true;
   const resources = ${JSON.stringify(resources)};
   const root = ${JSON.stringify(PDFJS_RESOURCE_ROOT)};
-  const nativeFetch = window.fetch.bind(window);
-  window.fetch = (input, init) => {
-    const url = typeof input === "string" ? input : input && input.url;
-    if (typeof url === "string" && url.startsWith(root)) {
-      const key = decodeURIComponent(url.slice(root.length));
-      const dataUrl = resources[key];
-      if (dataUrl) {
-        return nativeFetch(dataUrl, init);
-      }
-      console.warn("[PKU Art] Missing PDF.js resource", { url, key });
-      return Promise.resolve(new Response("", {
-        status: 404,
-        statusText: "PDF.js resource not found"
-      }));
+  const getUrlString = (input) => {
+    if (typeof input === "string") {
+      return input;
     }
-    return nativeFetch(input, init);
+    if (input instanceof URL) {
+      return input.href;
+    }
+    if (input && typeof input.url === "string") {
+      return input.url;
+    }
+    if (input && typeof input.href === "string") {
+      return input.href;
+    }
+    return null;
   };
+  const resolveResourceUrl = (input) => {
+    const url = getUrlString(input);
+    if (typeof url !== "string" || !url.startsWith(root)) {
+      return null;
+    }
+    const key = decodeURIComponent(url.slice(root.length));
+    const dataUrl = resources[key];
+    if (!dataUrl) {
+      console.warn("[PKU Art] Missing PDF.js resource", { url, key });
+      return "";
+    }
+    return dataUrl;
+  };
+  if (typeof globalThis.fetch === "function") {
+    const nativeFetch = globalThis.fetch.bind(globalThis);
+    globalThis.fetch = (input, init) => {
+      const resourceUrl = resolveResourceUrl(input);
+      if (resourceUrl !== null) {
+        return resourceUrl
+          ? nativeFetch(resourceUrl, init)
+          : Promise.resolve(new Response("", {
+              status: 404,
+              statusText: "PDF.js resource not found"
+            }));
+      }
+      return nativeFetch(input, init);
+    };
+  }
+  if (typeof globalThis.XMLHttpRequest === "function") {
+    const originalOpen = globalThis.XMLHttpRequest.prototype.open;
+    globalThis.XMLHttpRequest.prototype.open = function patchedOpen(method, url, ...rest) {
+      const resourceUrl = resolveResourceUrl(url);
+      if (resourceUrl !== null) {
+        return originalOpen.call(this, method, resourceUrl || "data:text/plain,", ...rest);
+      }
+      return originalOpen.call(this, method, url, ...rest);
+    };
+  }
 })();
-</script>`;
+`;
 }
 
 function patchOfficialViewerModule(moduleSource) {
