@@ -77,6 +77,11 @@
         transition: background-color 0.2s;
     }
 
+    .setting-item.static-setting-item {
+        cursor: default;
+        align-items: flex-start;
+    }
+
     .setting-item:last-child { 
         border-bottom: none; 
     }
@@ -96,6 +101,25 @@
         gap: 8px;
         color: var(--c-secondary);
         font-size: 15px;
+    }
+
+    .item-value.multiline {
+        flex-direction: column;
+        align-items: flex-end;
+        text-align: right;
+        max-width: 58%;
+        line-height: 1.4;
+        word-break: break-word;
+    }
+
+    .setting-link {
+        color: var(--c-secondary);
+        text-decoration: none;
+    }
+
+    .setting-link:active,
+    .setting-link:hover {
+        text-decoration: underline;
     }
 
     .btn {

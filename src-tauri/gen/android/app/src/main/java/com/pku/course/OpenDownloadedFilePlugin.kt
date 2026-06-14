@@ -4,11 +4,14 @@ import android.app.Activity
 import android.content.ClipData
 import android.content.Intent
 import android.webkit.MimeTypeMap
+import androidx.core.content.pm.PackageInfoCompat
 import androidx.core.content.FileProvider
+import androidx.webkit.WebViewCompat
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
 import app.tauri.plugin.Invoke
+import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
 import java.io.File
 
@@ -19,6 +22,24 @@ class OpenDownloadedFileArgs {
 
 @TauriPlugin
 class OpenDownloadedFilePlugin(private val activity: Activity) : Plugin(activity) {
+    @Command
+    fun getWebViewInfo(invoke: Invoke) {
+        try {
+            val packageInfo = WebViewCompat.getCurrentWebViewPackage(activity)
+            val payload = JSObject().apply {
+                put("packageName", packageInfo?.packageName)
+                put("versionName", packageInfo?.versionName)
+                put(
+                    "versionCode",
+                    packageInfo?.let { PackageInfoCompat.getLongVersionCode(it).toString() }
+                )
+            }
+            invoke.resolve(payload)
+        } catch (ex: Exception) {
+            invoke.reject(ex.message)
+        }
+    }
+
     @Command
     fun openDownloadedFile(invoke: Invoke) {
         try {

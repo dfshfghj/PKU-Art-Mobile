@@ -2959,6 +2959,30 @@ function initializeSettingPage() {
         return
     }
 
+    const GITHUB_HOME_URL = 'https://github.com/dfshfghj/PKU-Art-Mobile';
+
+    const parseWebViewVersionFromUserAgent = (userAgent) => {
+        if (!userAgent) {
+            return null;
+        }
+
+        const match = userAgent.match(/(?:Chrome|CriOS)\/([^\s]+)/i);
+        return match ? `${match[1]}（UA）` : null;
+    };
+
+    const resolveRuntimeInfoText = (runtimeInfo, userAgent) => {
+        const webviewVersion = runtimeInfo?.webviewVersionName || parseWebViewVersionFromUserAgent(userAgent) || '未识别';
+        const webviewPackageName = runtimeInfo?.webviewPackageName || (/Android/i.test(userAgent) ? '未读取到原生包名' : '当前平台未提供');
+        const webviewVersionCode = runtimeInfo?.webviewVersionCode ? ` (${runtimeInfo.webviewVersionCode})` : '';
+
+        return {
+            appVersion: runtimeInfo?.appVersion || (isTauriRuntime() ? '读取失败' : '非 Tauri 环境'),
+            webviewVersion: `${webviewVersion}${runtimeInfo?.webviewVersionName ? webviewVersionCode : ''}`,
+            webviewPackageName,
+            userAgent: userAgent || '不可用',
+        };
+    };
+
     const updateThemeStatusText = () => {
         const themeStatusText = document.getElementById('themeStatusText');
         if (!themeStatusText) return;
@@ -2992,6 +3016,33 @@ function initializeSettingPage() {
             window.PKUArtThemeManager.setTheme(nextMode);
             updateThemeStatusText();
         }
+    };
+
+    const updateRuntimeInfo = async () => {
+        const appVersionText = document.getElementById('appVersionText');
+        const webviewVersionText = document.getElementById('webviewVersionText');
+        const webviewPackageText = document.getElementById('webviewPackageText');
+        const userAgentText = document.getElementById('userAgentText');
+        if (!appVersionText || !webviewVersionText || !webviewPackageText || !userAgentText) {
+            return;
+        }
+
+        const userAgent = navigator.userAgent || '';
+        let runtimeInfo = null;
+
+        if (isTauriRuntime()) {
+            try {
+                runtimeInfo = await getTauriBridge()?.app?.getRuntimeInfo?.();
+            } catch (error) {
+                console.warn('[PKU Art] Failed to load runtime info', error);
+            }
+        }
+
+        const resolvedInfo = resolveRuntimeInfoText(runtimeInfo, userAgent);
+        appVersionText.textContent = resolvedInfo.appVersion;
+        webviewVersionText.textContent = resolvedInfo.webviewVersion;
+        webviewPackageText.textContent = resolvedInfo.webviewPackageName;
+        userAgentText.textContent = resolvedInfo.userAgent;
     };
 
     const insert = () => {
@@ -3028,11 +3079,54 @@ function initializeSettingPage() {
             </div>
         </div>
     </div>
+    <div class="card">
+        <div class="setting-item static-setting-item">
+            <div class="item-label">
+                <span>应用版本</span>
+            </div>
+            <div class="item-value multiline">
+                <span id="appVersionText">读取中...</span>
+            </div>
+        </div>
+        <div class="setting-item static-setting-item">
+            <div class="item-label">
+                <span>WebView 版本</span>
+            </div>
+            <div class="item-value multiline">
+                <span id="webviewVersionText">读取中...</span>
+            </div>
+        </div>
+        <div class="setting-item static-setting-item">
+            <div class="item-label">
+                <span>WebView 包名</span>
+            </div>
+            <div class="item-value multiline">
+                <span id="webviewPackageText">读取中...</span>
+            </div>
+        </div>
+        <div class="setting-item static-setting-item">
+            <div class="item-label">
+                <span>User Agent</span>
+            </div>
+            <div class="item-value multiline">
+                <span id="userAgentText">读取中...</span>
+            </div>
+        </div>
+        <div class="setting-item">
+            <div class="item-label">
+                <span>GitHub 主页</span>
+            </div>
+            <div class="item-value multiline">
+                <a class="setting-link" href="${GITHUB_HOME_URL}" target="_blank" rel="noreferrer noopener">dfshfghj/PKU-Art-Mobile</a>
+            </div>
+        </div>
+    </div>
     <button class="btn btn-primary" id="logoutBtn"><a href="/webapps/login/?action=logout">退出登录</a></button>
 </div>`;
         locationPane.appendChild(settingPanel);
 
         updateThemeStatusText();
+        void updateRuntimeInfo();
         
         const themeToggleRow = settingPanel.querySelector('#themeToggleRow');
         if (themeToggleRow) {

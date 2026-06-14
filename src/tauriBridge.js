@@ -130,9 +130,16 @@ if (!window.PkuArtTauri) {
         };
     }
 
+    async function getRuntimeInfo() {
+        return invoke('get_runtime_info');
+    }
+
     window.PkuArtTauri = {
         isAvailable: true,
         invoke,
+        app: {
+            getRuntimeInfo,
+        },
         http: {
             fetch: tauriFetch,
         },

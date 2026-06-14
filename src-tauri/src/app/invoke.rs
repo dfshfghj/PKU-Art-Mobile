@@ -1,6 +1,7 @@
 use crate::util::{
     check_file_or_append, get_download_message_with_lang, show_toast, MessageType,
 };
+use crate::android_file_opener;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::fs::{self, File};
@@ -50,6 +51,18 @@ pub struct NotificationParams {
 #[derive(serde::Serialize)]
 pub struct DownloadResult {
     path: String,
+}
+
+#[derive(Serialize)]
+pub struct RuntimeInfo {
+    #[serde(rename = "appVersion")]
+    app_version: String,
+    #[serde(rename = "webviewPackageName")]
+    webview_package_name: Option<String>,
+    #[serde(rename = "webviewVersionName")]
+    webview_version_name: Option<String>,
+    #[serde(rename = "webviewVersionCode")]
+    webview_version_code: Option<String>,
 }
 
 #[derive(Clone)]
@@ -571,6 +584,18 @@ fn maybe_open_downloaded_file(
     app.opener()
         .open_path(file_path, None::<&str>)
         .map_err(|error| error.to_string())
+}
+
+#[command]
+pub fn get_runtime_info<R: tauri::Runtime>(app: AppHandle<R>) -> Result<RuntimeInfo, String> {
+    let webview_info = android_file_opener::get_webview_info(&app)?;
+
+    Ok(RuntimeInfo {
+        app_version: app.package_info().version.to_string(),
+        webview_package_name: webview_info.as_ref().and_then(|info| info.package_name.clone()),
+        webview_version_name: webview_info.as_ref().and_then(|info| info.version_name.clone()),
+        webview_version_code: webview_info.and_then(|info| info.version_code),
+    })
 }
 
 #[command]

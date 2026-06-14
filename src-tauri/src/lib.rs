@@ -17,8 +17,8 @@ use std::time::Duration;
 use app::setup::{set_global_shortcut, set_system_tray};
 use app::{
     invoke::{
-        download_file, download_file_by_binary, fetch_unread_notifications, send_notification,
-        sync_course_credentials, CourseNotificationState,
+        download_file, download_file_by_binary, fetch_unread_notifications, get_runtime_info,
+        send_notification, sync_course_credentials, CourseNotificationState,
     },
     window::set_window,
 };
@@ -109,6 +109,7 @@ pub fn run_app() {
             android_file_opener::open_downloaded_file,
             download_file,
             download_file_by_binary,
+            get_runtime_info,
             send_notification,
             sync_course_credentials,
             fetch_unread_notifications,
