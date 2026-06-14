@@ -1,9 +1,9 @@
-#[cfg(target_os = "android")]
-use serde::Deserialize;
 use tauri::{
     plugin::{Builder, PluginHandle, TauriPlugin},
-    AppHandle, Manager, Runtime,
+    AppHandle, Runtime,
 };
+#[cfg(target_os = "android")]
+use tauri::Manager;
 
 #[cfg(target_os = "android")]
 const PLUGIN_IDENTIFIER: &str = "com.pku.course";
@@ -13,11 +13,8 @@ pub struct AndroidFileOpener<R: Runtime>(PluginHandle<R>);
 impl<R: Runtime> AndroidFileOpener<R> {
     #[cfg(target_os = "android")]
     fn open_downloaded_file(&self, path: impl Into<String>) -> Result<(), String> {
-        #[derive(Deserialize)]
-        struct MobileOpenResult {}
-
         self.0
-            .run_mobile_plugin::<MobileOpenResult>(
+            .run_mobile_plugin::<serde_json::Value>(
                 "openDownloadedFile",
                 serde_json::json!({ "path": path.into() }),
             )

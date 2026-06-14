@@ -12,6 +12,7 @@
   },
   "permissions": [
     "shell:allow-open",
+    "opener:allow-open-url",
     "opener:allow-default-urls",
     "opener:allow-open-path",
     "core:window:allow-theme",

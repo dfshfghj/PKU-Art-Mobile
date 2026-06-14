@@ -222,6 +222,23 @@ function initializePageTransitionLoading() {
         return;
     }
 
+    const downloadPathPatterns = ['/bbcswebdav/', '/download/'];
+
+    const isDownloadNavigation = (resolvedUrl, anchor) => {
+        if (!(resolvedUrl instanceof URL) || !(anchor instanceof HTMLAnchorElement)) {
+            return false;
+        }
+
+        const pathname = resolvedUrl.pathname.toLowerCase();
+        return (
+            anchor.hasAttribute('download') ||
+            resolvedUrl.searchParams.has('download') ||
+            resolvedUrl.searchParams.has('attachment') ||
+            resolvedUrl.searchParams.get('launch_in_new') === 'true' ||
+            downloadPathPatterns.some((pattern) => pathname.includes(pattern))
+        );
+    };
+
     const shouldShowForAnchor = (anchor) => {
         if (!(anchor instanceof HTMLAnchorElement)) {
             return false;
@@ -245,6 +262,10 @@ function initializePageTransitionLoading() {
         try {
             const resolvedUrl = new URL(anchor.href, window.location.href);
             if (!/^https?:$/.test(resolvedUrl.protocol)) {
+                return false;
+            }
+
+            if (isDownloadNavigation(resolvedUrl, anchor)) {
                 return false;
             }
 
@@ -1239,12 +1260,11 @@ function enableDirectOpenLinks() {
 
         try {
             const resolvedUrl = new URL(href, window.location.href);
-            console.log(resolvedUrl);
             if (!/^https?:$/.test(resolvedUrl.protocol)) {
                 return false;
             }
 
-            return !/(^|\.)pku\.edu\.cn$/i.test(resolvedUrl.hostname);
+            return resolvedUrl.origin !== window.location.origin;
         } catch (_error) {
             return false;
         }
